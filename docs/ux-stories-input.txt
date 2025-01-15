@@ -43,3 +43,13 @@ The create batches screen will have all the same fields as the edit batch screen
 
 
 each card in the view batches screen will also have a delete option. when user clicks on delete then show an alert that 'all the notes, assignments and fee payment information will be removed if you do this. Do you really want to go ahead? ' If the user clicks on yes delete the branch and refresh the view batches scfreen. if user clicks on  go back go back to the view batches screen
+
+
+Now lets create the home page. The home page will be the default screen of the app as long as the user session is active. 
+the home page of the app will have the following information 
+1. A header from where user can access a menu that has the infrequent options like manage batches and manage profile. Header will also have prominement display of the batch name and an option to change the batch. header will also include a notification icon with the count of unread notifications. On clicking the notifications it will lead to a notification view page. we will have a separte story for taht screen. on clicking the mnanage batches option it goes to view batches screen. on clicking the profile option it goes to the edit profile screen
+2. A set of cards that displays the important features of the app. students, assignments, notes, fee tracker and tests. each card can have a summary informatiion say (number of students). Each cardwill be showing the summary in the context of the selected class from header. Each cardwill be clickable and it will lead to corresponding screen
+3. on clicking the back button the app closes
+
+In case if the user has not created any batch yet, show a notifiction to create batch. On clicking the notification it should go to create batches screen
+
