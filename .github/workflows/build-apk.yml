@@ -3,14 +3,8 @@ name: Build APK
 on:
   push:
     branches:
-      - buildapk
+      - main
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version number'
-        required: true
-        default: '1.0.0'
-
 
 jobs:
   build:
@@ -46,9 +40,19 @@ jobs:
           cd android
           ./gradlew assembleRelease
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-release.apk
-          path: android/app/build/outputs/apk/release/app-release.apk
+          - name: Upload APK to S3
+
+        env:
+
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+
+        run: |
+
+          echo "Uploading APK to S3..."
+          aws s3 cp android/app/build/outputs/apk/release/app-release.apk s3://parentteacherconnetappreleases/ --region $AWS_REGION
+
+
 
