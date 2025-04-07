@@ -5,6 +5,12 @@ on:
     branches:
       - buildapk
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number'
+        required: true
+        default: '1.0.0'
+
 
 jobs:
   build:
