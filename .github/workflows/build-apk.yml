@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'APK version (e.g., 1.0.0)'
+        description: 'APK version '
         required: true
         default: '1.0.0'
 
