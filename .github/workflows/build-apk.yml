@@ -52,5 +52,6 @@ jobs:
           AWS_REGION: ${{ secrets.AWS_REGION }}
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
         run: |
-          echo "Uploading APK to S3..."
-          aws s3 cp android/app/build/outputs/apk/release/app-release.apk s3://$AWS_S3_BUCKET/ --region $AWS_REGION
+         FILE_NAME="TeacherToParent.${{ github.event.inputs.version }}.apk"
+         cp android/app/build/outputs/apk/release/app-release.apk $FILE_NAME
+         aws s3 cp $FILE_NAME s3://$AWS_S3_BUCKET/ --region $AWS_REGION
