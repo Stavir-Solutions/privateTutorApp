@@ -48,4 +48,4 @@ jobs:
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
         run: |
           echo "Uploading APK to S3..."
-          aws s3 cp android/app/build/outputs/apk/release/app-release.apk s3://parentteacherconnetappreleases/ --region $AWS_REGION
+          aws s3 cp android/app/build/outputs/apk/release/app-release.apk s3://$AWS_S3_BUCKET/ --region $AWS_REGION
