@@ -59,7 +59,7 @@ jobs:
         run: |
           FILE_NAME="TeacherToParent.${VERSION}.apk"
           cp android/app/build/outputs/apk/release/app-release.apk $FILE_NAME
-          aws s3 cp $FILE_NAME s3://$AWS_S3_BUCKET/ --region $AWS_REGION --acl public-read
+          aws s3 cp $FILE_NAME s3://$AWS_S3_BUCKET/ --region $AWS_REGION
           APK_URL="https://${AWS_S3_BUCKET}.s3.${AWS_REGION}.amazonaws.com/${FILE_NAME}"
           echo "apk_url=${APK_URL}" >> $GITHUB_OUTPUT
 
