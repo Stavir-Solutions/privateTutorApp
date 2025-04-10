@@ -55,3 +55,6 @@ jobs:
          FILE_NAME="TeacherToParent.${{ github.event.inputs.version }}.apk"
          cp android/app/build/outputs/apk/release/app-release.apk $FILE_NAME
          aws s3 cp $FILE_NAME s3://$AWS_S3_BUCKET/ --region $AWS_REGION
+         echo file upload url
+         echo "https://${AWS_S3_BUCKET}.s3.${AWS_REGION}.amazonaws.com/${FILE_NAME}"
+         
