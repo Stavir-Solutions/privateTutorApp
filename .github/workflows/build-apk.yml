@@ -62,6 +62,7 @@ jobs:
 
       - name: Output APK download link
         run: |
-          echo  (${{ steps.upload_apk.outputs.apk_url }})" >> $GITHUB_STEP_SUMMARY
+            echo "The build link (action): https://${{ env.AWS_S3_BUCKET }}.s3.${{ env.AWS_REGION }}.amazonaws.com/TeacherToParent.${{ github.event.inputs.version }}.apk" >> $GITHUB_STEP_SUMMARY
+
 
          
