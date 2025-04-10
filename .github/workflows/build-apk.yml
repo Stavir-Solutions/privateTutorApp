@@ -1,20 +1,10 @@
-name: Build APK
-
-on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'APK version '
-        required: true
-        default: '1.0.0'
-
 jobs:
   build:
     name: Build Android APK
     runs-on: ubuntu-latest
+
+    env:  # ✅ Set the VERSION here for all steps to access
+      VERSION: ${{ github.event.inputs.version }}
 
     steps:
       - name: Checkout code
@@ -40,9 +30,6 @@ jobs:
       - name: Make Gradlew Executable
         run: chmod +x android/gradlew
 
-      - name: Set version
-        run: echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
-
       - name: Build Release APK
         run: |
           cd android
@@ -55,6 +42,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+          VERSION: ${{ env.VERSION }}   # 👈 still available here
         run: |
           FILE_NAME="TeacherToParent.${VERSION}.apk"
           cp android/app/build/outputs/apk/release/app-release.apk $FILE_NAME
@@ -64,5 +52,5 @@ jobs:
 
       - name: Output APK download link
         run: |
-          echo "APK version: ${VERSION}" >> $GITHUB_STEP_SUMMARY
+          echo "APK version: $VERSION" >> $GITHUB_STEP_SUMMARY
           echo "Download Link: https://${{ secrets.AWS_S3_BUCKET }}.s3.${{ secrets.AWS_REGION }}.amazonaws.com/TeacherToParent.${VERSION}.apk" >> $GITHUB_STEP_SUMMARY
