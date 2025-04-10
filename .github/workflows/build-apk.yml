@@ -46,6 +46,7 @@ jobs:
           ./gradlew assembleRelease
 
       - name: Upload APK to S3
+        id: upload_apk
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -61,5 +62,6 @@ jobs:
 
       - name: Output APK download link
         run: |
-          echo  The build link (action): (${{ steps.upload_apk.outputs.apk_url }})" >> $GITHUB_STEP_SUMMARY
+          echo  (${{ steps.upload_apk.outputs.apk_url }})" >> $GITHUB_STEP_SUMMARY
+
          
