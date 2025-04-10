@@ -56,5 +56,10 @@ jobs:
          cp android/app/build/outputs/apk/release/app-release.apk $FILE_NAME
          aws s3 cp $FILE_NAME s3://$AWS_S3_BUCKET/ --region $AWS_REGION
          echo file upload url
-         echo "https://${AWS_S3_BUCKET}.s3.${AWS_REGION}.amazonaws.com/${FILE_NAME}"
+         APK_URL="https://${AWS_S3_BUCKET}.s3.${AWS_REGION}.amazonaws.com/${FILE_NAME}"
+         echo "apk_url=${APK_URL}" >> $GITHUB_OUTPUT
+
+      - name: Output APK download link
+        run: |
+          echo  The build link (action): (${{ steps.upload_apk.outputs.apk_url }})" >> $GITHUB_STEP_SUMMARY
          
