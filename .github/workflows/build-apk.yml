@@ -40,6 +40,9 @@ jobs:
       - name: Make Gradlew Executable
         run: chmod +x android/gradlew
 
+      - name: Set version
+        run: echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+
       - name: Build Release APK
         run: |
           cd android
@@ -53,16 +56,13 @@ jobs:
           AWS_REGION: ${{ secrets.AWS_REGION }}
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
         run: |
-         FILE_NAME="TeacherToParent.${{ github.event.inputs.version }}.apk"
-         cp android/app/build/outputs/apk/release/app-release.apk $FILE_NAME
-         aws s3 cp $FILE_NAME s3://$AWS_S3_BUCKET/ --region $AWS_REGION
-         echo file upload url
-         APK_URL="https://${AWS_S3_BUCKET}.s3.${AWS_REGION}.amazonaws.com/${FILE_NAME}"
-         echo "apk_url=${APK_URL}" >> $GITHUB_OUTPUT
+          FILE_NAME="TeacherToParent.${VERSION}.apk"
+          cp android/app/build/outputs/apk/release/app-release.apk $FILE_NAME
+          aws s3 cp $FILE_NAME s3://$AWS_S3_BUCKET/ --region $AWS_REGION --acl public-read
+          APK_URL="https://${AWS_S3_BUCKET}.s3.${AWS_REGION}.amazonaws.com/${FILE_NAME}"
+          echo "apk_url=${APK_URL}" >> $GITHUB_OUTPUT
 
       - name: Output APK download link
         run: |
-            echo "The build link (action): https://${{ env.AWS_S3_BUCKET }}.s3.${{ env.AWS_REGION }}.amazonaws.com/TeacherToParent.${{ github.event.inputs.version }}.apk" >> $GITHUB_STEP_SUMMARY
-
-
-         
+          echo "APK version: ${VERSION}" >> $GITHUB_STEP_SUMMARY
+          echo "Download Link: https://${{ secrets.AWS_S3_BUCKET }}.s3.${{ secrets.AWS_REGION }}.amazonaws.com/TeacherToParent.${VERSION}.apk" >> $GITHUB_STEP_SUMMARY
