@@ -12,19 +12,27 @@ on:
         description: 'APK version'
         required: true
         default: '1.0.0'
+env:
+  VERSION: ${{ github.event.inputs.version || '1.0.0' }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
 
 jobs:
   build:
     name: Build Android APK
     runs-on: ubuntu-latest
-    env:
-      VERSION: ${{ github.event.inputs.version || '1.0.0' }}
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-      AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
 
     steps:
+      - name: Print envs
+        run: |
+          echo "VERSION: $VERSION"
+          echo "AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID"
+          echo "AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY"
+          echo "AWS_REGION: $AWS_REGION"
+          echo "AWS_S3_BUCKET: $AWS_S3_BUCKET"
+
       - name: Checkout code
         uses: actions/checkout@v3
 
@@ -48,10 +56,10 @@ jobs:
       - name: Make Gradlew Executable
         run: chmod +x android/gradlew
 
-      - name: Build Release APK
-        run: |
-          cd android
-          ./gradlew assembleRelease
+      # - name: Build Release APK
+      #   run: |
+      #     cd android
+      #     ./gradlew assembleRelease
 
       - name: Upload APK to S3
         run: |
