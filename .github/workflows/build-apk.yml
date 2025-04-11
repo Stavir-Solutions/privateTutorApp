@@ -1,4 +1,5 @@
 name: Build APK
+
 on:
   push:
     branches:
@@ -9,50 +10,68 @@ on:
         description: 'APK version'
         required: true
         default: '1.0.0'
-env:
-  VERSION: ${{ github.event.inputs.version || '1.0.0' }}
-  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  AWS_REGION: us-east-1
-  AWS_S3_BUCKET: parentteacherconnetappreleases
+      awsRegion:
+        description: 'AWS region'
+        required: true
+        default: 'us-east-1'
+      s3Bucket:
+        description: 'S3 bucket name'
+        required: true
+        default: 'parentteacherconnetappreleases'
+
 jobs:
   build:
     name: Build Android APK
     runs-on: ubuntu-latest
+    env:
+      VERSION: "${{ github.event.inputs.version }}"
+      AWS_REGION: "${{ github.event.inputs.awsRegion }}"
+      AWS_S3_BUCKET: "${{ github.event.inputs.s3Bucket }}"
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      - name: Print envs
+
+      - name: Print environment variables
         run: |
           echo "VERSION: $VERSION"
-          echo "AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID"
-          echo "AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY"
           echo "AWS_REGION: $AWS_REGION"
           echo "AWS_S3_BUCKET: $AWS_S3_BUCKET"
-      - name: Checkout code
-        uses: actions/checkout@v3
+
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
+
       - name: Install dependencies
         run: npm install
+
       - name: Set up Java
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '17'
+
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+
       - name: Make Gradlew Executable
         run: chmod +x android/gradlew
-      - name: Build Release APK run:| cd android ./gradlew assembleRelease
+
+      - name: Build Release APK
+        run: |
+          cd android
+          ./gradlew assembleRelease
+
       - name: Upload APK to S3
         run: |
           FILE_NAME="TeacherToParent.${VERSION}.apk"
           cp android/app/build/outputs/apk/release/app-release.apk $FILE_NAME
-          aws s3 cp $FILE_NAME s3://$AWS_S3_BUCKET/ --region $AWS_REGION
+          aws s3 cp "$FILE_NAME" "s3://$AWS_S3_BUCKET/" --region "$AWS_REGION"
           echo "APK uploaded as: $FILE_NAME"
+
       - name: Output APK download link
         run: |
           echo "APK version: $VERSION" >> $GITHUB_STEP_SUMMARY
