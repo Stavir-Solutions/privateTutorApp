@@ -1,3 +1,5 @@
+
+
 name: Build APK
 
 on:
@@ -15,6 +17,13 @@ jobs:
   build:
     name: Build Android APK
     runs-on: ubuntu-latest
+
+    env:
+      VERSION: ${{ github.event.inputs.version }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
 
     steps:
       - name: Checkout code
@@ -40,31 +49,20 @@ jobs:
       - name: Make Gradlew Executable
         run: chmod +x android/gradlew
 
-      - name: Set VERSION env variable
-        run: echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
-
       - name: Build Release APK
         run: |
           cd android
           ./gradlew assembleRelease
 
       - name: Upload APK to S3
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
         run: |
           FILE_NAME="TeacherToParent.${VERSION}.apk"
           cp android/app/build/outputs/apk/release/app-release.apk $FILE_NAME
-          aws s3 cp $FILE_NAME s3://$AWS_S3_BUCKET/ --region $AWS_REGION 
+          aws s3 cp $FILE_NAME s3://$AWS_S3_BUCKET/ --region $AWS_REGION
           echo "APK uploaded as: $FILE_NAME"
 
       - name: Output APK download link
-        env:
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
-          VERSION: ${{ env.VERSION }}
         run: |
           echo "APK version: $VERSION" >> $GITHUB_STEP_SUMMARY
           echo "Download Link: https://${AWS_S3_BUCKET}.s3.${AWS_REGION}.amazonaws.com/TeacherToParent.${VERSION}.apk" >> $GITHUB_STEP_SUMMARY
+
