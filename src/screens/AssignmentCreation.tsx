@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -15,20 +15,70 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {pick} from '@react-native-documents/picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {base_url} from '../utils/store';
+import {postApi, putapi} from '../utils/api';
+import {currentdate} from '../components/moment';
+import moment from 'moment';
+import Toast from 'react-native-toast-message';
 
-const CreateAssignment = ({navigation}) => {
-  const [assignment, setAssignment] = useState({
-    title: '',
-    submissionDate: new Date(),
-    description: '',
-    attachments: [],
-  });
+const CreateAssignment = ({navigation, route}) => {
+  const isEditMode = route.params?.assignment ? true : false;
+  const [assignment, setAssignment] = useState(
+    isEditMode
+      ? route.params.assignment
+      : {
+          publishDate: currentdate(),
+          title: '',
+          submissionDate: new Date(),
+          attachmentUrls: [],
+          batchId: '',
+          details: '',
+        },
+  );
 
+  const [submissionDate, setSubmitdate] = useState(new Date());
   const [errors, setErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
+  const [attachmentsToUpload, setAttachmentsToUpload] = useState([]);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [fadeAnim] = useState(new Animated.Value(0));
+  const [attachmentList, setAttachmentList] = useState([]);
+  const [existingAttachments, setExistingAttachments] = useState([]);
+  const [removedAttachments, setRemovedAttachments] = useState([]);
+
+  useEffect(() => {
+    console.log(
+      'useEffect triggered:',
+      route?.params?.assignment?.attachmentUrls,
+    );
+    const date = route?.params?.assignment?.submissionDate;
+
+    if (date instanceof Date || typeof date === 'string') {
+      const dateObject = new Date(date);
+      if (!isNaN(dateObject.getTime())) {
+        setSubmitdate(dateObject);
+      } else {
+        console.error('Invalid date string:', date);
+      }
+    }
+
+    if (isEditMode && route?.params?.assignment?.attachmentUrls) {
+      const mappedAttachments = route?.params?.assignment?.attachmentUrls.map(
+        url => ({
+          uri: url,
+          name: url.split('/').pop(),
+          size: 1.5,
+          type: 'application/pdf',
+          isExisting: true,
+        }),
+      );
+
+      setAttachmentList(mappedAttachments);
+      setExistingAttachments(mappedAttachments);
+    }
+  }, [route?.params?.assignment?.attachmentUrls, isEditMode]);
 
   const animateSuccess = () => {
     Animated.sequence([
@@ -46,14 +96,21 @@ const CreateAssignment = ({navigation}) => {
     ]).start();
   };
 
+  const getDateObject = date => {
+    if (!date) return new Date();
+    return typeof date === 'string' ? new Date(date) : date;
+  };
+
   const attachmentValidation = size => {
     console.log(size);
     const newErrors = {};
     console.log(size > 2 * 1024 * 1024);
-    if (size > 2 * 1024) {
+    if (size > 2 * 1024 * 1024) {
       newErrors.attachment = 'File size must be less than 2MB';
       setErrors(newErrors);
+      return false;
     }
+    return true;
   };
 
   const validateForm = () => {
@@ -69,39 +126,282 @@ const CreateAssignment = ({navigation}) => {
   };
 
   const handleSave = async () => {
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      return;
+    }
 
-    setIsSaving(true);
-    // API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setIsSaving(false);
-    setShowSuccessMessage(true);
-    animateSuccess();
-    setTimeout(() => setShowSuccessMessage(false), 3000);
+    try {
+      setIsSaving(true);
+
+      const Batch_id = await AsyncStorage.getItem('batch_id');
+      if (!Batch_id) {
+        console.warn('Batch_id is not available!');
+        setIsSaving(false);
+        return;
+      }
+
+      await new Promise(resolve => {
+        setAssignment(prev => ({
+          ...prev,
+          batchId: Batch_id,
+        }));
+        resolve();
+      });
+
+      let newAttachmentUrls = [];
+      if (attachmentsToUpload.length > 0) {
+        newAttachmentUrls = await Promise.all(
+          attachmentsToUpload.map(attachment => uploadSingleFile(attachment)),
+        );
+
+        newAttachmentUrls = newAttachmentUrls.filter(url => url !== undefined);
+      }
+
+      let currentAttachmentUrls = [];
+      if (isEditMode) {
+        currentAttachmentUrls = existingAttachments
+          .filter(attachment => !removedAttachments.includes(attachment.uri))
+          .map(attachment => attachment.uri);
+      }
+
+      const updatedAssignment = {
+        ...assignment,
+        batchId: Batch_id,
+        attachmentUrls: [...currentAttachmentUrls, ...newAttachmentUrls],
+      };
+
+      setAssignment(updatedAssignment);
+
+      if (isEditMode) {
+        await Assignment_Update(updatedAssignment);
+      } else {
+        await Assignment_Submit(updatedAssignment);
+      }
+
+      setIsSaving(false);
+
+      setShowSuccessMessage(true);
+      animateSuccess();
+      setTimeout(() => setShowSuccessMessage(false), 3000);
+    } catch (error) {
+      console.error('Error during save:', error.message);
+
+      setIsSaving(false);
+    }
   };
 
   const handleAttachments = async () => {
     try {
       const result = await pick({
-        allowMultiSelection: false,
+        allowMultiSelection: true,
         type: ['*/*'],
       });
 
-      if (result) {
-        console.log('Document selected:', result);
-        let size = result[0].size;
-        setAssignment(prev => ({
-          ...prev,
-          attachments: [
-            ...(prev.attachments || []),
-            ...(Array.isArray(result) ? result : [result]),
-          ],
-        }));
-        attachmentValidation(size);
+      if (result && result.length > 0) {
+        console.log('Documents selected:', result);
+
+        const newFiles = result
+          .map(file => ({
+            uri:
+              Platform.OS === 'android'
+                ? file.uri
+                : file.uri.replace('file://', ''),
+            type: file.type || 'application/pdf',
+            name: file.name || 'file.pdf',
+            size: file.size,
+            isExisting: false,
+          }))
+          .filter(file => attachmentValidation(file.size));
+
+        if (newFiles.length === 0) {
+          return;
+        }
+
+        setAttachmentList(prev => [...prev, ...newFiles]);
+        setAttachmentsToUpload(prev => [...prev, ...newFiles]);
       }
     } catch (error) {
       console.error('Document Picker Error:', error);
     }
+  };
+
+  const uploadMultipleFiles = async files => {
+    const uploadedUrls = [];
+
+    for (const file of files) {
+      const uploadedUrl = await uploadSingleFile(file);
+      if (uploadedUrl) {
+        uploadedUrls.push(uploadedUrl);
+      }
+    }
+
+    return uploadedUrls;
+  };
+
+  const uploadSingleFile = async fileData => {
+    try {
+      console.log('Uploading file...', fileData.name);
+
+      const Token = await AsyncStorage.getItem('Token');
+
+      const formData = new FormData();
+      formData.append('file', fileData);
+
+      const userId = await AsyncStorage.getItem('TeacherId');
+
+      formData.append('userType', 'TEACHER');
+      formData.append('userId', userId);
+      formData.append('uploadType', 'assignments');
+
+      const url = `${base_url}uploads`;
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${Token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+        body: formData,
+      });
+
+      console.log('formdata:  ', formData);
+
+      console.log('Status Code:', response.status);
+
+      const textResponse = await response.text();
+      console.log('Raw Response:', textResponse);
+
+      let responseData;
+      try {
+        responseData = JSON.parse(textResponse);
+      } catch (error) {
+        console.error('Error parsing JSON response:', error);
+        return undefined;
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          `Upload failed: ${responseData.message || 'Unknown error'}`,
+        );
+      }
+
+      console.log('Upload Successful!', responseData.url);
+      return responseData.url;
+    } catch (error) {
+      console.error('Error during file upload:', error.message);
+      return undefined;
+    }
+  };
+
+  const Assignment_Submit = async assignmentData => {
+    try {
+      const Token = await AsyncStorage.getItem('Token');
+
+      if (!Token) {
+        throw new Error('Authentication token is missing.');
+      }
+
+      const uploadedUrls = await uploadMultipleFiles(attachmentsToUpload);
+
+      const url = `assignments`;
+      const headers = {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${Token}`,
+      };
+
+      const body = {
+        ...assignmentData,
+        attachmentUrls: uploadedUrls,
+      };
+
+      const fliteredData = Object.fromEntries(
+        Object.entries(body).filter(
+          ([_, value]) => value !== '' && value !== null && value !== undefined,
+        ),
+      );
+
+      console.log('body', fliteredData);
+
+      const onResponse = res => {
+        setAssignment(res);
+        Toast.show({
+          type: 'success',
+          text1: 'New Assignment',
+          text2: 'Created Succecssfully',
+        });
+        navigation.goBack();
+      };
+
+      const onCatch = error => {
+        Toast.show({
+          type: 'error',
+          text1: 'Failed',
+          text2: 'Assigment creation failed',
+        });
+        console.error('Error submitting assignment:', error);
+      };
+
+      postApi(url, headers, fliteredData, onResponse, onCatch, navigation);
+      console.log('Assignment Submitted:', body);
+    } catch (error) {
+      console.error('Error during assignment submission:', error);
+    }
+  };
+
+  const Assignment_Update = async assignmentData => {
+    const Token = await AsyncStorage.getItem('Token');
+
+    const url = `assignments/${assignmentData.id}`;
+    const headers = {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${Token}`,
+    };
+
+    const payload = {
+      publishDate: assignmentData.publishDate,
+      title: assignmentData.title,
+      submissionDate: assignmentData.submissionDate,
+      attachmentUrls: assignmentData.attachmentUrls,
+      batchId: assignmentData.batchId,
+      details: assignmentData.details,
+    };
+
+    const onResponse = res => {
+      setAssignment(res);
+      Toast.show({
+        type: 'success',
+        text1: 'Assignment',
+        text2: 'Updated Succecssfully',
+      });
+      navigation.goBack();
+    };
+
+    const onCatch = res => {
+      console.log('Error');
+      Toast.show({
+        type: 'error',
+        text1: 'Failed',
+        text2: 'Assigment update failed',
+      });
+      console.log(res);
+    };
+
+    putapi(url, headers, payload, onResponse, onCatch, navigation);
+    console.log(payload);
+  };
+
+  const handleRemoveAttachment = (index, item) => {
+    if (item.isExisting) {
+      setRemovedAttachments(prev => [...prev, item.uri]);
+    } else {
+      setAttachmentsToUpload(prev =>
+        prev.filter(attachment => attachment.uri !== item.uri),
+      );
+    }
+
+    setAttachmentList(prev => prev.filter((_, i) => i !== index));
   };
 
   const renderAttachmentItem = (item, index) => (
@@ -111,13 +411,7 @@ const CreateAssignment = ({navigation}) => {
         {item.name}
       </Text>
       <TouchableOpacity
-        onPress={() => {
-          const newErrors = {};
-          const newAttachments = [...assignment.attachments];
-          newAttachments.splice(index, 1);
-          setAssignment(prev => ({...prev, attachments: newAttachments}));
-          setErrors(newErrors);
-        }}
+        onPress={() => handleRemoveAttachment(index, item)}
         style={styles.removeAttachment}>
         <MaterialIcons name="close" size={20} color="#EF4444" />
       </TouchableOpacity>
@@ -131,7 +425,9 @@ const CreateAssignment = ({navigation}) => {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <MaterialIcons name="arrow-back" size={24} color="#001d3d" />
         </TouchableOpacity>
-        <Text style={styles.appBarTitle}>Create Assignment</Text>
+        <Text style={styles.appBarTitle}>
+          {isEditMode ? 'Edit Assignment' : 'Create Assignment'}
+        </Text>
         <View style={{width: 24}} />
       </View>
 
@@ -139,15 +435,6 @@ const CreateAssignment = ({navigation}) => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.container}>
         <ScrollView style={styles.scrollView}>
-          {showSuccessMessage && (
-            <Animated.View style={[styles.successMessage, {opacity: fadeAnim}]}>
-              <MaterialIcons name="check-circle" size={24} color="#059669" />
-              <Text style={styles.successText}>
-                Assignment saved successfully
-              </Text>
-            </Animated.View>
-          )}
-
           <View style={styles.formContainer}>
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Title *</Text>
@@ -173,7 +460,7 @@ const CreateAssignment = ({navigation}) => {
                 style={styles.dateInput}
                 onPress={() => setShowDatePicker(true)}>
                 <Text style={styles.dateText}>
-                  {assignment.submissionDate.toLocaleDateString()}
+                  {submissionDate.toLocaleDateString()}
                 </Text>
                 <MaterialIcons
                   name="calendar-today"
@@ -190,9 +477,9 @@ const CreateAssignment = ({navigation}) => {
               <Text style={styles.label}>Description</Text>
               <TextInput
                 style={[styles.input, styles.textArea]}
-                value={assignment.description}
+                value={assignment.details}
                 onChangeText={text =>
-                  setAssignment(prev => ({...prev, description: text}))
+                  setAssignment(prev => ({...prev, details: text}))
                 }
                 placeholder="Enter assignment description"
                 placeholderTextColor="#9CA3AF"
@@ -211,7 +498,7 @@ const CreateAssignment = ({navigation}) => {
                 <Text style={styles.attachmentButtonText}>Add Attachments</Text>
               </TouchableOpacity>
               <View style={styles.attachmentsList}>
-                {assignment.attachments.map((item, index) =>
+                {attachmentList.map((item, index) =>
                   renderAttachmentItem(item, index),
                 )}
                 {errors.attachment && (
@@ -243,16 +530,23 @@ const CreateAssignment = ({navigation}) => {
 
         {showDatePicker && (
           <DateTimePicker
-            value={assignment.submissionDate}
+            value={getDateObject(assignment?.submissionDate || submissionDate)}
             mode="date"
             display="default"
             onChange={(event, selectedDate) => {
               setShowDatePicker(false);
+              const formattedDate = moment(selectedDate ? selectedDate : '')
+                .utc()
+                .set({hour: 23, minute: 59, second: 59, millisecond: 999})
+                .format('YYYY-MM-DDTHH:mm:ss.SSS[Z]');
+
               if (selectedDate) {
                 setAssignment(prev => ({
                   ...prev,
-                  submissionDate: selectedDate,
+                  submissionDate: formattedDate,
                 }));
+                setSubmitdate(selectedDate);
+                console.log(selectedDate.toLocaleDateString());
               }
             }}
           />
@@ -386,7 +680,6 @@ const styles = StyleSheet.create({
     elevation: 5,
     gap: 12,
   },
-
   cancelButton: {
     paddingHorizontal: 20,
     paddingVertical: 12,
