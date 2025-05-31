@@ -7,36 +7,57 @@ import {
   TouchableOpacity,
   StatusBar,
   FlatList,
+  RefreshControl,
 } from 'react-native';
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-
 import {getapi} from '../utils/api';
 import dateconvert from '../components/moment';
 import BatchSelectorSheet from '../components/BatchSelectorSheet';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {batch_id, selectBatch} from '../utils/authslice';
+import {useDispatch, useSelector} from 'react-redux';
+import ShimmerPlaceholder from 'react-native-shimmer-placeholder';
+import {useFocusEffect} from '@react-navigation/core';
 
 const NotesScreen = ({navigation}) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [notes, setNotes] = useState([]);
-
-  const [selectedBatch, setSelectedBatch] = useState({
-    subject: 'Algebra',
-    name: 'Math 1012',
-    id: '212e46a9-9a1d-4906-a27e-5ef03e989955',
-  });
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [isBatchSelected, setIsBatchSelected] = useState(true);
+  const selectedBatchString = useSelector(state => state.auth?.selectBatch);
+  const selectedBatch_id = useSelector(state => state.auth?.batch_id);
 
   const refRBSheet = useRef();
+  const dispatch = useDispatch();
 
-  const handleBatchSelect = batch => {
-    setSelectedBatch(batch);
+  const handleBatchSelect = async batch => {
+    await AsyncStorage.setItem('batch_id', batch.id.toString());
+    await AsyncStorage.setItem('batch', JSON.stringify(batch));
+    dispatch(batch_id(batch.id));
+    dispatch(selectBatch(batch));
+    await Notes_fetch();
     refRBSheet.current.close();
   };
 
   const Notes_fetch = async () => {
+    setLoading(true);
     const Token = await AsyncStorage.getItem('Token');
-    const url = '/notes/batch/123e4567-e89b-12d3-a456-426614174000';
+    const Batch_id = await AsyncStorage.getItem('batch_id');
+    const currentBatchId = Batch_id ? Batch_id : selectedBatch_id;
+
+    if (!currentBatchId) {
+      console.log('No batch selected yet');
+      setLoading(false);
+      setIsBatchSelected(false);
+      setNotes([]);
+      setRefreshing(false);
+      return;
+    }
+    setIsBatchSelected(true);
+    const url = `/notes/batch/${currentBatchId}`;
     const headers = {
       Accept: 'application/json',
       'Content-Type': 'application/json',
@@ -45,25 +66,50 @@ const NotesScreen = ({navigation}) => {
     const onResponse = res => {
       console.log('hiii');
       console.log(res);
-      setNotes(res);
+      setNotes(res || []);
+      setLoading(false);
+      setRefreshing(false);
     };
 
     const onCatch = res => {
       console.log('Error');
       console.log(res);
+      setLoading(false);
+      setRefreshing(false);
     };
-    getapi(url, headers, onResponse, onCatch);
+    getapi(url, headers, onResponse, onCatch, navigation);
   };
 
   useEffect(() => {
     Notes_fetch();
     console.log(notes);
     console.log('notes fetch');
-  }, [1]);
+  }, [selectedBatchString]);
+
+  useFocusEffect(
+    useCallback(() => {
+      console.log('Screen is focused');
+      Notes_fetch();
+      return () => {
+        console.log('Screen is unfocused');
+      };
+    }, []),
+  );
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    Notes_fetch();
+  }, []);
+
+  const filteredNotes = useMemo(() => {
+    return notes.filter(item =>
+      item.Title.toLowerCase().includes(searchQuery.toLowerCase()),
+    );
+  }, [searchQuery, notes]);
 
   const NoteCard = ({item}) => (
     <TouchableOpacity
-      onPress={() => navigation.navigate('NoteDetails', {note: item})}
+      onPress={() => navigation.navigate('Note_Detail', {note: item})}
       style={styles.noteCard}>
       <View style={styles.noteTypeIcon}>
         <MaterialIcons name="description" size={24} color="#FF9800" />
@@ -80,6 +126,20 @@ const NotesScreen = ({navigation}) => {
         </View>
       </View>
     </TouchableOpacity>
+  );
+  const renderNoBatchSelected = () => (
+    <View style={styles.noBatchContainer}>
+      <MaterialIcons name="class" size={64} color="#ccc" />
+      <Text style={styles.noBatchText}>No batch selected</Text>
+      <Text style={styles.noBatchSubtext}>
+        Please select a batch to view notes
+      </Text>
+      <TouchableOpacity
+        style={styles.selectBatchButton}
+        onPress={() => refRBSheet.current.open()}>
+        <Text style={styles.selectBatchButtonText}>Select Batch</Text>
+      </TouchableOpacity>
+    </View>
   );
 
   return (
@@ -102,7 +162,7 @@ const NotesScreen = ({navigation}) => {
             borderColor: '#e0e0e0',
           }}>
           <Text style={{color: '#001d3d', fontWeight: 'bold', fontSize: 16}}>
-            {selectedBatch.name}
+            {selectedBatch_id ? selectedBatchString?.name : 'Select Batch'}
           </Text>
 
           <MaterialIcons
@@ -113,38 +173,72 @@ const NotesScreen = ({navigation}) => {
           />
         </TouchableOpacity>
       </View>
-
-      <ScrollView style={styles.container}>
-        <View style={styles.searchSection}>
-          <View style={styles.searchBar}>
-            <MaterialIcons name="search" size={24} color="#666" />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search notes"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
+      {!isBatchSelected ? (
+        renderNoBatchSelected()
+      ) : loading ? (
+        <View style={styles.container}>
+          <View style={styles.searchSection}>
+            <ShimmerPlaceholder style={styles.searchBar} />
           </View>
-          <TouchableOpacity
-            style={styles.createButton}
-            onPress={() => navigation.navigate('Note_Create')}>
-            <Text style={styles.createButtonText}>Create</Text>
-          </TouchableOpacity>
-        </View>
 
-        <FlatList
-          data={notes}
-          renderItem={({item}) => <NoteCard item={item} />}
-          keyExtractor={item => item.id.toString()}
-          scrollEnabled={false}
-          style={styles.notesList}
-        />
-      </ScrollView>
-      <BatchSelectorSheet
-        ref={refRBSheet}
-        selectedBatch={selectedBatch}
-        onBatchSelect={handleBatchSelect}
-      />
+          {[1, 2, 3, 4, 5].map((_, index) => (
+            <View style={styles.noteCard}>
+              <View key={index} style={styles.noteDetailsContainer}>
+                <ShimmerPlaceholder style={styles.noteTitle} />
+              </View>
+              <View style={styles.noteDetails}>
+                <ShimmerPlaceholder style={styles.noteContent} />
+                <ShimmerPlaceholder style={styles.notesList} />
+              </View>
+            </View>
+          ))}
+        </View>
+      ) : (
+        <ScrollView
+          style={styles.container}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={['#001d3d']}
+              tintColor="#001d3d"
+            />
+          }>
+          <View style={styles.searchSection}>
+            <View style={styles.searchBar}>
+              <MaterialIcons name="search" size={24} color="#666" />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search Notes"
+                placeholderTextColor="#666"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
+            </View>
+            <TouchableOpacity
+              style={styles.createButton}
+              onPress={() => navigation.navigate('Note_Create')}>
+              <Text style={styles.createButtonText}>Create</Text>
+            </TouchableOpacity>
+          </View>
+
+          {notes.length === 0 ? (
+            <View style={styles.noNotesContainer}>
+              <MaterialIcons name="description" size={48} color="#ccc" />
+              <Text style={styles.noNotesText}>No notes in this batch</Text>
+            </View>
+          ) : (
+            <FlatList
+              data={filteredNotes}
+              renderItem={({item}) => <NoteCard item={item} />}
+              keyExtractor={item => item.id.toString()}
+              scrollEnabled={false}
+              style={styles.notesList}
+            />
+          )}
+        </ScrollView>
+      )}
+      <BatchSelectorSheet ref={refRBSheet} onBatchSelect={handleBatchSelect} />
     </View>
   );
 };
@@ -172,35 +266,6 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-  },
-  batchSelector: {
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-  },
-  batchButton: {
-    backgroundColor: '#f8f9fa',
-    borderRadius: 16,
-    paddingHorizontal: '5%',
-    paddingVertical: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-  },
-  batchName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#001d3d',
-  },
-  batchSubject: {
-    fontSize: 14,
-    color: '#666',
-    marginLeft: 10,
-    flex: 1,
-  },
-  batchIcon: {
-    marginLeft: 10,
   },
   searchSection: {
     flexDirection: 'row',
@@ -290,6 +355,52 @@ const styles = StyleSheet.create({
     color: '#666',
     flexShrink: 0,
     marginTop: 2,
+  },
+  noNotesContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 30,
+  },
+  noNotesText: {
+    fontSize: 16,
+    color: '#666',
+    marginTop: 10,
+  },
+  noBatchContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  noBatchText: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#333',
+    marginTop: 16,
+  },
+  noBatchSubtext: {
+    fontSize: 16,
+    color: '#888',
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  selectBatchButton: {
+    backgroundColor: '#001d3d',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 25,
+    marginTop: 24,
+    shadowColor: '#1D49A7',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 8,
+  },
+  selectBatchButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 
