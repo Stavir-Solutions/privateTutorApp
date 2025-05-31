@@ -3,6 +3,7 @@ import {
   FlatList,
   Image,
   Platform,
+  RefreshControl,
   StatusBar,
   StyleSheet,
   Text,
@@ -10,131 +11,241 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
 import BottomNavigation from '../components/BottomNavBar';
 import RBSheet from 'react-native-raw-bottom-sheet';
-import { getapi } from '../utils/api';
+import {useFocusEffect, useRoute} from '@react-navigation/native';
+import {getapi} from '../utils/api';
 import BatchSelectorSheet from '../components/BatchSelectorSheet';
-import { useDispatch, useSelector } from 'react-redux';
-import { batch_id, logout } from '../utils/authslice';
+import {useDispatch, useSelector} from 'react-redux';
+import {
+  batch_id,
+  fetch_batchs,
+  logout,
+  selectBatch,
+  setBatchCreated,
+} from '../utils/authslice';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import ShimmerPlaceholder from 'react-native-shimmer-placeholder';
+import {getUserId} from '../utils/TokenDecoder';
 
-const HomeScreen = ({ navigation }) => {
+const HomeScreen = ({navigation}) => {
   const refRBSheet = useRef();
-  const Batch_id = useSelector(state => state.auth.batch_id);
-  const [selectedBatch, setSelectedBatch] = useState({
-    subject: 'Algebra',
-    paymentFrequency: 'Monthly',
-    course: 'Mathematics',
-    teacherId: '660e8400-e29b-41d4-a716-446655440001',
-    description:
-      'An introductory course to Algebra covering basic concepts and problem-solving techniques.',
-    id: '212e46a9-9a1d-4906-a27e-5ef03e989955',
-    paymentAmount: 150,
-    name: 'Math 1012',
-    paymentDayOfMonth: 15,
-  });
+  const selectedBatchString = useSelector(state => state.auth?.selectBatch);
+  const selectedBatch_id = useSelector(state => state.auth?.batch_id);
+  const [loading, setLoading] = useState(true);
   const [students, setStudents] = useState([]);
-  // var codesPostal: CodePostal[] = []
+  const [profilePicUrl, setProfileImage] = useState('');
+  const [filteredStudents, setFilteredStudents] = useState([]);
+  const [searchText, setSearchText] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
+  const [isBatchSelected, setIsBatchSelected] = useState(true);
   const dispatch = useDispatch();
 
   const students_fetch = async () => {
-    const Token = await AsyncStorage.getItem("Token")
-    const Batch_id = await AsyncStorage.getItem("batch_id")
-    console.log('Tokens',Token)
-    const url = `students/batch/${Batch_id}`;
+    setLoading(true);
+    const Token = await AsyncStorage.getItem('Token');
+    const Batch_id = await AsyncStorage.getItem('batch_id');
+
+    const currentBatchId = Batch_id ? Batch_id : selectedBatch_id;
+
+    if (!currentBatchId) {
+      console.log('No batch selected yet');
+      setLoading(false);
+      setIsBatchSelected(false);
+      setStudents([]);
+      setFilteredStudents([]);
+      setRefreshing(false);
+      return;
+    }
+
+    const url = `students/batch/${currentBatchId}`;
     const headers = {
       Accept: 'application/json',
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${Token}`
+      Authorization: `Bearer ${Token}`,
     };
     const onResponse = res => {
-      console.log('hiii');
-      console.log(batch_id);
-      setStudents(res);
+      setIsBatchSelected(true);
+      setStudents(res || []);
+      setFilteredStudents(res || []);
+      setLoading(false);
+      setRefreshing(false);
     };
 
     const onCatch = res => {
-      console.log('Error');
-      console.log(res);
+      console.error('Error fetching students:', res);
+      setLoading(false);
+      setStudents([]);
+      setFilteredStudents([]);
+      setRefreshing(false);
     };
-    getapi(url, headers, onResponse, onCatch);
+    getapi(url, headers, onResponse, onCatch, navigation);
   };
 
-  const handle_logout = () => {
-    dispatch(logout());
-    navigation.replace('Login');
+  const TeacherDetails = async () => {
+    const Token = await AsyncStorage.getItem('Token');
+    if (!Token) {
+      throw new Error('No token found, authentication required');
+    }
+
+    const Teacherid = await getUserId(Token);
+    if (!Teacherid) {
+      throw new Error('Failed to fetch Teacher ID');
+    }
+
+    const url = `teachers/${Teacherid}`;
+    const headers = {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${Token}`,
+    };
+
+    const onResponse = res => {
+      if (res) {
+        setProfileImage(res?.profilePicUrl);
+      }
+      setLoading(false);
+    };
+
+    const onCatch = error => {
+      console.error('API Error:', error);
+      setLoading(false);
+    };
+
+    getapi(url, headers, onResponse, onCatch, navigation);
+  };
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    students_fetch();
+    setSearchText('');
+  }, []);
+
+  const handleBatchSelect = async batch => {
+    await AsyncStorage.setItem('batch_id', batch.id.toString());
+    await AsyncStorage.setItem('batch', JSON.stringify(batch));
+    dispatch(batch_id(batch.id));
+    dispatch(selectBatch(batch));
+    setSearchText('');
+    setIsBatchSelected(true);
+    await students_fetch();
+    refRBSheet.current.close();
+  };
+
+  const handleSearch = text => {
+    setSearchText(text);
+    if (text.trim() === '') {
+      setFilteredStudents(students);
+    } else {
+      const filtered = students.filter(student => {
+        const fullName =
+          `${student.firstName} ${student.lastName}`.toLowerCase();
+        const searchQuery = text.toLowerCase();
+        const parentName = (student.parent1Name || '').toLowerCase();
+        const parentPhone = (student.parent1Phone || '').toLowerCase();
+
+        return (
+          fullName.includes(searchQuery) ||
+          parentName.includes(searchQuery) ||
+          parentPhone.includes(searchQuery)
+        );
+      });
+      setFilteredStudents(filtered);
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchText('');
+    setFilteredStudents(students);
   };
 
   useEffect(() => {
+    const checkBatchSelection = async () => {
+      const Batch_id = await AsyncStorage.getItem('batch_id');
+      if (!Batch_id && !selectedBatch_id) {
+        setIsBatchSelected(false);
+      } else {
+        setIsBatchSelected(true);
+      }
+    };
+
+    checkBatchSelection();
     students_fetch();
-    console.log(students);
-    console.log('mo');
-  }, [1]);
+    TeacherDetails();
+    fetch_batchs();
+  }, []);
 
-  // // Function to Open Bottom Sheet
-  // const handleOpenBottomSheet = useCallback(() => {
-  //   bottomSheetRef.current?.expand();
-  // }, []);
+  useFocusEffect(
+    useCallback(() => {
+      console.log('Screen is focused');
+      students_fetch();
+      TeacherDetails();
+      dispatch(fetch_batchs());
+      return () => {
+        console.log('Screen is unfocused');
+      };
+    }, []),
+  );
 
-  const renderStudentCard = ({ item }) => {
-    console.log(item.age);
+  const renderStudentCard = ({item}) => {
     return (
       <TouchableOpacity
         style={styles.listCard}
-        onPress={() => navigation.navigate('Student_Detail', { student: item })}>
+        onPress={() => navigation.navigate('Student_Detail', {student: item})}>
         {item.profilePicUrl != null ? (
-          <Image source={{ uri: item.profilePicUrl }} style={styles.profilePic} />
+          <Image source={{uri: item.profilePicUrl}} style={styles.profilePic} />
         ) : (
           <View style={styles.noPicContainer}>
             <Image
-              source={require('../resources/logo.png')}
+              source={require('../resources/user.png')}
               style={styles.noPic}
             />
           </View>
         )}
-        <View style={{ flexDirection: 'column' }}>
+        <View style={{flexDirection: 'column'}}>
           <Text style={styles.studentName}>
             {item.firstName} {item.lastName}
           </Text>
           <Text style={styles.parentDtl}>Parent: {item.parent1Name}</Text>
           <Text style={styles.parentDtl}>Phone No: {item.parent1Phone}</Text>
         </View>
-        {/* <View style={styles.actions}>
-        <TouchableOpacity style={styles.actionButton}>
-          <MaterialIcons name="message" size={20} color="#4CAF50" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton}>
-          <MaterialIcons name="visibility" size={20} color="#2196F3" />
-        </TouchableOpacity>
-      </View> */}
       </TouchableOpacity>
     );
   };
 
-  const handleBatchSelect = async (batch) => {
-    await AsyncStorage.removeItem('batch_id');
-    setSelectedBatch(batch);
-    console.log(batch.id)
-    dispatch(batch_id(batch.id)),
-      refRBSheet.current.close();
-    await students_fetch()
-  };
+  const renderNoBatchSelected = () => (
+    <View style={styles.noBatchContainer}>
+      <MaterialIcons name="class" size={64} color="#ccc" />
+      <Text style={styles.noBatchText}>No batch selected</Text>
+      <Text style={styles.noBatchSubtext}>
+        Please select a batch to view students
+      </Text>
+      <TouchableOpacity
+        style={styles.selectBatchButton}
+        onPress={() => refRBSheet.current.open()}>
+        <Text style={styles.selectBatchButtonText}>Select Batch</Text>
+      </TouchableOpacity>
+    </View>
+  );
 
   return (
     <View style={styles.screen}>
       <StatusBar backgroundColor="#fff" barStyle="dark-content" />
       <View style={styles.appBar}>
-        <TouchableOpacity onPress={() => handle_logout()}>
+        <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
           <Image
+            source={
+              !profilePicUrl
+                ? require('../resources/user.png')
+                : {uri: profilePicUrl ? profilePicUrl : ''}
+            }
             style={styles.avatarImg}
-            source={{
-              uri: 'https://cdn-icons-png.flaticon.com/512/5310/5310895.png',
-            }}
           />
         </TouchableOpacity>
         <Text style={styles.appBarTitle}>Smart Teacher</Text>
@@ -148,72 +259,142 @@ const HomeScreen = ({ navigation }) => {
           </View>
         </TouchableOpacity>
       </View>
-      <View style={styles.container}>
-        <View style={styles.batchCard}>
-          <LinearGradient
-            colors={['rgb(255,255,255)', 'rgb(229,235,252)']} // Light gradient
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.card}>
-            <TouchableOpacity
-              onPress={() => refRBSheet.current.open()}
-              style={styles.hexagonWrapper}>
-              <LinearGradient
-                colors={['rgb(255,255,255)', 'rgb(247,248,252)']} // Same as card to blend in
-                style={styles.hexagon}>
-                <MaterialIcons
-                  name="change-circle"
-                  size={24}
-                  color="#001d3d"
-                  style={styles.hexagonIcon}
-                />
-              </LinearGradient>
-            </TouchableOpacity>
-            <Text style={styles.batchCardTitle}>{selectedBatch.name}</Text>
-            <Text style={styles.batchCardSubtitle}>
-              {selectedBatch.subject}
-            </Text>
-            <Text style={styles.batchCardCount}>{students.length}</Text>
-            <View style={styles.createBatch}>
-              <TouchableOpacity
-                onPress={() => navigation.navigate('Batch_Create')}
-                style={styles.createBatchButton}>
-                <Text style={styles.createBatchButtonText}>
-                  Create New Batch
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </LinearGradient>
-        </View>
-        <View style={styles.header}>
-          <View style={styles.searchBar}>
-            <Ionicons name="search" size={24} color="#666" />
-            <TextInput
-              placeholder="Search Student"
-              placeholderTextColor="#666"
-              style={styles.searchInput}
-            />
+      {loading ? (
+        <View style={styles.container}>
+          <ShimmerPlaceholder style={styles.batchCard} />
+          <View style={styles.searchContainer}>
+            <ShimmerPlaceholder style={styles.searchInput} />
+            <ShimmerPlaceholder style={styles.addButton} />
           </View>
-          <TouchableOpacity
-            style={styles.addStudentButton}
-            accessibilityLabel="Add new student"
-            onPress={() => navigation.navigate('Student_Create')}>
-            <Text style={styles.addStudentButtonText}>Add Student</Text>
-          </TouchableOpacity>
+          {[1, 2, 3, 4, 5].map((_, index) => (
+            <View key={index} style={styles.listCard}>
+              <View style={styles.profilePicPlaceholder} />
+              <View>
+                <ShimmerPlaceholder style={styles.studentName} />
+                <ShimmerPlaceholder style={styles.parentDetail} />
+              </View>
+            </View>
+          ))}
         </View>
-        {/* <Text style={styles.listTitle}>Students In Batch</Text> */}
+      ) : (
+        <View style={styles.container}>
+          <View style={styles.batchCard}>
+            <LinearGradient
+              colors={['rgb(255,255,255)', 'rgb(229,235,252)']}
+              start={{x: 0, y: 0}}
+              end={{x: 1, y: 1}}
+              style={styles.card}>
+              <TouchableOpacity
+                onPress={() => refRBSheet.current.open()}
+                style={styles.hexagonWrapper}>
+                <LinearGradient
+                  colors={['rgb(255,255,255)', 'rgb(247,248,252)']}
+                  style={styles.hexagon}>
+                  <MaterialIcons
+                    name="change-circle"
+                    size={24}
+                    color="#001d3d"
+                    style={styles.hexagonIcon}
+                  />
+                </LinearGradient>
+              </TouchableOpacity>
+              <Text style={styles.batchCardTitle}>
+                {isBatchSelected && selectedBatchString
+                  ? selectedBatchString.name
+                  : 'Select a batch'}
+              </Text>
+              <Text style={styles.batchCardSubtitle}>
+                {isBatchSelected && selectedBatchString
+                  ? selectedBatchString.subject
+                  : 'No batch selected'}
+              </Text>
+              <Text style={styles.batchCardCount}>
+                {isBatchSelected ? students.length : 0}
+              </Text>
+              <View style={styles.createBatch}>
+                <TouchableOpacity
+                  onPress={() =>
+                    navigation.navigate('Batch_Create', {update: false})
+                  }
+                  style={styles.createBatchButton}>
+                  <Text style={styles.createBatchButtonText}>
+                    Create New Batch
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </LinearGradient>
+          </View>
 
-        <FlatList
-          data={students}
-          renderItem={renderStudentCard}
-          keyExtractor={item => item.firstName}
-          contentContainerStyle={styles.list}
-        />
-      </View>
+          {!isBatchSelected ? (
+            renderNoBatchSelected()
+          ) : (
+            <>
+              <View style={styles.header}>
+                <View style={styles.searchBar}>
+                  <Ionicons name="search" size={24} color="#666" />
+                  <TextInput
+                    placeholder="Search Student"
+                    placeholderTextColor="#666"
+                    style={styles.searchInput}
+                    value={searchText}
+                    onChangeText={handleSearch}
+                  />
+                  {searchText ? (
+                    <TouchableOpacity onPress={clearSearch}>
+                      <Ionicons name="close-circle" size={24} color="#666" />
+                    </TouchableOpacity>
+                  ) : null}
+                </View>
+                <TouchableOpacity
+                  style={styles.addStudentButton}
+                  accessibilityLabel="Add new student"
+                  onPress={() =>
+                    navigation.navigate('Student_Create', {update: false})
+                  }>
+                  <Text style={styles.addStudentButtonText}>Add Student</Text>
+                </TouchableOpacity>
+              </View>
+
+              {filteredStudents.length === 0 ? (
+                <View style={styles.noStudentsContainer}>
+                  <FontAwesome name="user" size={48} color="#ccc" />
+                  <Text style={styles.noStudentsText}>
+                    {searchText
+                      ? 'No matching students found'
+                      : 'No students in this batch'}
+                  </Text>
+                  {searchText ? (
+                    <TouchableOpacity
+                      style={styles.clearSearchButton}
+                      onPress={clearSearch}>
+                      <Text style={styles.clearSearchText}>Clear Search</Text>
+                    </TouchableOpacity>
+                  ) : null}
+                </View>
+              ) : (
+                <FlatList
+                  data={filteredStudents}
+                  renderItem={renderStudentCard}
+                  keyExtractor={(item, index) => `${item.firstName}-${index}`}
+                  contentContainerStyle={styles.list}
+                  refreshControl={
+                    <RefreshControl
+                      refreshing={refreshing}
+                      onRefresh={onRefresh}
+                      colors={['#001d3d']}
+                      tintColor="#001d3d"
+                    />
+                  }
+                />
+              )}
+            </>
+          )}
+        </View>
+      )}
       <BatchSelectorSheet
         ref={refRBSheet}
-        selectedBatch={selectedBatch}
         onBatchSelect={handleBatchSelect}
+        navigation={navigation}
       />
     </View>
   );
@@ -227,13 +408,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgb(255,255,255)',
   },
   appBar: {
-    // paddingTop: Platform.OS === 'ios' ? 40 : StatusBar.currentHeight + 10,
     paddingTop: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    // paddingVertical: 10,
     marginBottom: 20,
     backgroundColor: '#fff',
   },
@@ -269,7 +448,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgb(255,255,255)',
     borderRadius: 10,
     shadowColor: '#1D49A7',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 8,
@@ -295,14 +474,13 @@ const styles = StyleSheet.create({
     paddingLeft: 20,
   },
   card: {
-    // width: 150,
     height: '100%',
     borderRadius: 12,
     padding: 15,
     justifyContent: 'center',
     position: 'relative',
     shadowColor: '#1D49A7',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: {width: 0, height: 4},
     shadowOpacity: 0.2,
     shadowRadius: 6,
     elevation: 15,
@@ -319,11 +497,11 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 12,
-    transform: [{ rotate: '45deg' }, { translateX: -10 }, { translateY: -10 }],
+    transform: [{rotate: '45deg'}, {translateX: -10}, {translateY: -10}],
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#1D49A7',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 20,
@@ -331,7 +509,7 @@ const styles = StyleSheet.create({
   hexagonIcon: {
     paddingTop: 10,
     paddingRight: 5,
-    transform: [{ rotate: '-45deg' }],
+    transform: [{rotate: '-45deg'}],
   },
   createBatch: {
     position: 'absolute',
@@ -371,10 +549,9 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     fontSize: 16,
     color: 'rgb(51,51,51)',
+    flex: 1,
   },
   addStudentButton: {
-    // backgroundColor: 'rgb(53, 104, 244)',
-    // backgroundColor: 'rgb(34, 78, 200)',
     backgroundColor: '#001d3d',
     padding: 10,
     borderRadius: 20,
@@ -398,6 +575,7 @@ const styles = StyleSheet.create({
   list: {
     padding: 3,
     marginHorizontal: '5%',
+    flexGrow: 1,
   },
   listCard: {
     width: '100%',
@@ -408,7 +586,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     shadowColor: '#1D49A7',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 8,
@@ -431,7 +609,6 @@ const styles = StyleSheet.create({
   noPic: {
     width: 30,
     height: 30,
-
     opacity: 0.5,
   },
   studentName: {
@@ -449,5 +626,79 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     marginLeft: 12,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  addButton: {
+    width: 1000 * 0.3,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: '#E5EBFC',
+  },
+  profilePicPlaceholder: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#E5EBFC',
+    marginRight: 16,
+  },
+  parentDetail: {width: 80, height: 12, backgroundColor: '#E5EBFC'},
+  noStudentsContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  noStudentsText: {
+    fontSize: 18,
+    color: '#888',
+    marginTop: 12,
+  },
+  clearSearchButton: {
+    marginTop: 16,
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: '#f0f0f0',
+  },
+  clearSearchText: {
+    color: '#1D49A7',
+    fontWeight: '500',
+  },
+  noBatchContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  noBatchText: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#333',
+    marginTop: 16,
+  },
+  noBatchSubtext: {
+    fontSize: 16,
+    color: '#888',
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  selectBatchButton: {
+    backgroundColor: '#001d3d',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 25,
+    marginTop: 24,
+    shadowColor: '#1D49A7',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 8,
+  },
+  selectBatchButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
