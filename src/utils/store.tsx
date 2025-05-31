@@ -18,3 +18,4 @@ export const persistor = persistStore(store);
 export default store;
 console.log('store print');
 console.log(store);
+export const base_url = 'https://zkbsgdbbhc.execute-api.us-east-1.amazonaws.com/Dev/'
