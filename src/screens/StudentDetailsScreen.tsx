@@ -8,10 +8,12 @@ import {
   StatusBar,
   Dimensions,
 } from 'react-native';
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import LinearGradient from 'react-native-linear-gradient';
+import {getapi} from '../utils/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const {width} = Dimensions.get('window');
 
@@ -51,7 +53,9 @@ const StudentDetailsScreen = ({route, navigation}) => {
             <Ionicons name="arrow-back" size={24} color="#fff" />
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => navigation.navigate('EditStudent', {student})}
+            onPress={() =>
+              navigation.navigate('Student_Create', {student, update: true})
+            }
             style={styles.editButton}>
             <MaterialIcons name="edit" size={22} color="#fff" />
           </TouchableOpacity>
@@ -126,21 +130,18 @@ const StudentDetailsScreen = ({route, navigation}) => {
           <Text style={styles.sectionTitle}>Enrolled Batches</Text>
           <View style={styles.batchList}>
             {student.batches.map((batchId, index) => (
-              <TouchableOpacity key={index} style={styles.batchCard}>
+              <View key={index} style={styles.batchCard}>
                 <LinearGradient
                   colors={['#f8f9ff', '#ffffff']}
                   style={styles.batchContent}>
                   <View style={styles.batchInfo}>
-                    <Text style={styles.batchName}>Batch {index + 1}</Text>
-                    <Text style={styles.batchId}>{batchId.slice(0, 8)}</Text>
+                    <Text style={styles.batchName}>
+                      {batchId?.name || `Batch ${'BatchName'}`}
+                    </Text>
+                    <Text style={styles.batchId}>ID: {batchId?.id}</Text>
                   </View>
-                  <MaterialIcons
-                    name="chevron-right"
-                    size={24}
-                    color="#001d3d"
-                  />
                 </LinearGradient>
-              </TouchableOpacity>
+              </View>
             ))}
           </View>
         </View>
