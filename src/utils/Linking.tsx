@@ -1,0 +1,27 @@
+export const linking = {
+    prefixes: ['https://smart-teacher.com', 'http://smart-teacher.com', 'smartteacher://'],
+    config: {
+      screens: {
+        Home: 'home',
+        Login: 'login',
+        SignUp: 'signup',
+        Profile: 'profile',
+        Update_Profile: 'update-profile',
+        Fees: 'fees',
+        Fees_Detail: 'fees-detail/:feeId',
+        Assignment: 'assignments',
+        Assignment_Creation: 'assignment-creation',
+        Assignment_Detail: 'assignment-detail/:assignmentId',
+        Notes: 'notes',
+        Note_Create: 'note-create',
+        Note_Detail: 'note-detail/:noteId',
+        Chats: 'chats',
+        Chat: 'messages/:conversationId',
+        Student_Create: 'student-create',
+        Student_Detail: 'student-detail/:studentId',
+        Batch_Create: 'batch-create',
+        Notification: 'notifications',
+        Tabs: 'tabs',
+      },
+    },
+  };
