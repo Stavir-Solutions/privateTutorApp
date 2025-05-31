@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useCallback} from 'react';
 import {
   View,
   Text,
@@ -13,42 +13,48 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {getapi} from '../utils/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {useDispatch, useSelector} from 'react-redux';
+import {batch_id, fetch_batchs, selectBatch} from '../utils/authslice';
 
 const BatchItem = ({item, selectedBatch, onSelect}) => (
   <TouchableOpacity
     style={[
       styles.batchItem,
-      selectedBatch.id === item.id && styles.selectedBatchItem,
+      selectedBatch?.id === item.id && styles.selectedBatchItem,
     ]}
     onPress={() => onSelect(item)}>
     <View style={styles.batchItemContent}>
       <View style={styles.batchItemLeft}>
-        <View style={styles.batchIcon}>
+        <View
+          style={[
+            styles.batchIcon,
+            selectedBatch?.id === item.id && {backgroundColor: '#1A3366'},
+          ]}>
           <MaterialCommunityIcons
             name="book-education"
             size={24}
-            color={'#0F1F4B'}
+            color={selectedBatch?.id === item.id ? '#FFFFFF' : '#0F1F4B'}
           />
         </View>
         <View style={styles.batchInfo}>
           <Text
             style={[
               styles.batchName,
-              selectedBatch.id === item.id && styles.selectedText,
+              selectedBatch?.id === item.id && styles.selectedText,
             ]}>
             {item.name}
           </Text>
           <Text
             style={[
               styles.batchSubject,
-              selectedBatch.id === item.id && styles.selectedSubText,
+              selectedBatch?.id === item.id && styles.selectedSubText,
             ]}>
             {item.subject}
           </Text>
         </View>
       </View>
       <View style={styles.batchItemRight}>
-        {selectedBatch.id === item.id && (
+        {selectedBatch?.id === item.id && (
           <MaterialIcons name="check-circle" size={24} color="#fff" />
         )}
       </View>
@@ -57,31 +63,82 @@ const BatchItem = ({item, selectedBatch, onSelect}) => (
 );
 
 const BatchSelectorSheet = React.forwardRef(
-  ({selectedBatch, onBatchSelect}, ref) => {
-    const [batchs, setBatchs] = useState([]);
+  ({onBatchSelect, navigation}, ref) => {
+    const dispatch = useDispatch();
+    const batchs = useSelector(state => state.auth.batches) || [];
+    const reduxSelectedBatch = useSelector(state => state.auth.selectBatch);
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedBatch, setSelectedBatch] = useState(null);
 
-    const fetch_batchs = async () => {
-      const Token = await AsyncStorage.getItem("Token")
-      const url = 'batches/teacher/660e8400-e29b-41d4-a716-446655440001';
-      const headers = {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${Token}`
-      };
-      const onResponse = res => {
-        console.log(res);
-        setBatchs(res);
-      };
-      const onCatch = res => {
-        console.log('Error');
-        console.log(res);
-      };
-      getapi(url, headers, onResponse, onCatch);
+    const refreshBatches = useCallback(() => {
+      console.log('enetring from home screen');
+      return dispatch(fetch_batchs())
+        .then(response => {
+          if (response.payload && response.payload.length > 0) {
+            if (!selectedBatch && !reduxSelectedBatch) {
+              handleBatchSelect(response.payload[0]);
+            }
+          }
+          return response;
+        })
+        .catch(error => {
+          console.error('Error refreshing batches:', error);
+        });
+    }, [dispatch, selectedBatch, reduxSelectedBatch]);
+
+    useEffect(() => {
+      if (ref && typeof ref === 'object') {
+        ref.current = {
+          ...ref.current,
+          refreshBatches,
+        };
+      }
+    }, [ref, refreshBatches]);
+
+    const handleBatchSelect = useCallback(
+      async batch => {
+        if (!batch) return;
+
+        setSelectedBatch(batch);
+
+        await AsyncStorage.setItem('batch_id', batch.id.toString());
+        await AsyncStorage.setItem('batch', JSON.stringify(batch));
+
+        dispatch(batch_id(batch.id));
+        dispatch(selectBatch(batch));
+
+        if (onBatchSelect) {
+          onBatchSelect(batch);
+        }
+      },
+      [dispatch, onBatchSelect],
+    );
+
+    const handleNavigateToBatchCreate = () => {
+      if (navigation) {
+        if (ref && ref.current) {
+          ref.current.close();
+        }
+
+        navigation.navigate('Batch_Create', {update: false});
+      }
     };
 
     useEffect(() => {
-      fetch_batchs();
+      if (reduxSelectedBatch && typeof reduxSelectedBatch === 'object') {
+        setSelectedBatch(reduxSelectedBatch);
+      } else if (reduxSelectedBatch && typeof reduxSelectedBatch === 'string') {
+        try {
+          const parsedBatch = JSON.parse(reduxSelectedBatch);
+          setSelectedBatch(parsedBatch);
+        } catch (error) {
+          console.error('Error parsing batch:', error);
+        }
+      }
+    }, [reduxSelectedBatch]);
+
+    useEffect(() => {
+      refreshBatches();
     }, []);
 
     const filteredBatches = batchs.filter(batch => {
@@ -138,18 +195,27 @@ const BatchSelectorSheet = React.forwardRef(
               <BatchItem
                 item={item}
                 selectedBatch={selectedBatch}
-                onSelect={onBatchSelect}
+                onSelect={handleBatchSelect}
               />
             )}
             keyExtractor={item => item.id.toString()}
             contentContainerStyle={styles.batchList}
             showsVerticalScrollIndicator={false}
             ListEmptyComponent={
-              <Text style={styles.emptyText}>
-                {searchQuery
-                  ? 'No matching batches found'
-                  : 'No batches available'}
-              </Text>
+              searchQuery ? (
+                <Text style={styles.emptyText}>No matching batches found </Text>
+              ) : (
+                <View style={{justifyContent: 'center', alignItems: 'center'}}>
+                  <Text style={styles.emptyText}>No batches available</Text>
+                  <TouchableOpacity
+                    style={styles.selectBatchButton}
+                    onPress={handleNavigateToBatchCreate}>
+                    <Text style={styles.selectBatchButtonText}>
+                      Create Batch
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )
             }
           />
         </View>
@@ -247,6 +313,26 @@ const styles = StyleSheet.create({
   },
   selectedSubText: {
     color: '#E5E7EB',
+  },
+  selectBatchButton: {
+    width: '50%',
+    backgroundColor: '#001d3d',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 25,
+    marginTop: 24,
+    shadowColor: '#1D49A7',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  selectBatchButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 
