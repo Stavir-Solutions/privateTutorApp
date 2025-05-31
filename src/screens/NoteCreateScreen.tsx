@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -12,20 +12,57 @@ import {
   KeyboardAvoidingView,
   StatusBar,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {pick} from '@react-native-documents/picker';
+import {currentdate} from '../components/moment';
+import {base_url} from '../utils/store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {postApi, putapi} from '../utils/api';
+import moment from 'moment';
+import Toast from 'react-native-toast-message';
 
-const NoteCreateScreen = ({navigation}) => {
-  const [note, setNote] = useState({
-    title: '',
-    description: '',
-    attachments: [],
-  });
+const NoteCreateScreen = ({navigation, route}) => {
+  const isEditMode = route.params?.note ? true : false;
+  const [note, setNote] = useState(
+    isEditMode
+      ? route.params.note
+      : {
+          Title: '',
+          publishDate: currentdate(),
+          content: '',
+          listUrls: [],
+          batchId: '',
+        },
+  );
 
   const [errors, setErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [fadeAnim] = useState(new Animated.Value(0));
+  const [attachmentList, setAttachmentList] = useState([]);
+  const [attachmentsToUpload, setAttachmentsToUpload] = useState([]);
+  const [existingAttachments, setExistingAttachments] = useState([]);
+  const [removedAttachments, setRemovedAttachments] = useState([]);
+
+  useEffect(() => {
+    if (
+      isEditMode &&
+      route?.params?.note?.listUrls &&
+      route.params.note.listUrls.length > 0
+    ) {
+      const mappedAttachments = route.params.note.listUrls.map(url => ({
+        uri: url,
+        name: url.split('/').pop(),
+        size: 1.5,
+        type: 'application/pdf',
+        isExisting: true,
+      }));
+
+      setAttachmentList(mappedAttachments);
+      setExistingAttachments(mappedAttachments);
+    }
+  }, [route?.params?.note?.listUrls, isEditMode]);
 
   const animateSuccess = () => {
     Animated.sequence([
@@ -44,40 +81,142 @@ const NoteCreateScreen = ({navigation}) => {
   };
 
   const attachmentValidation = size => {
-    console.log(size);
     const newErrors = {};
-    console.log(size > 2 * 1024 * 1024);
-    if (size > 2 * 1024) {
+    if (size > 2 * 1024 * 1024) {
       newErrors.attachment = 'File size must be less than 2MB';
       setErrors(newErrors);
+
+      Toast.show({
+        type: 'error',
+        text1: 'Invalid File',
+        text2: 'File size must be less than 2MB',
+      });
+
+      return false;
     }
+    return true;
   };
 
   const validateForm = () => {
     const newErrors = {};
-    if (!note.title.trim()) {
+    if (!note.Title.trim()) {
       newErrors.title = 'Title is required';
     }
-    if (note.attachments && note.attachments.size > 2 * 1024 * 1024) {
-      newErrors.attachment = 'File size must be less than 2MB';
+    if (!note.content.trim()) {
+      newErrors.content = 'Description is required';
     }
+
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+
+    if (Object.keys(newErrors).length > 0) {
+      let errorMessage = '';
+      if (newErrors.title && newErrors.content) {
+        errorMessage = 'Title and Description are required';
+      } else if (newErrors.title) {
+        errorMessage = 'Title is required';
+      } else if (newErrors.content) {
+        errorMessage = 'Description is required';
+      } else {
+        errorMessage = 'Please check the form fields';
+      }
+
+      Toast.show({
+        type: 'error',
+        text1: 'Validation Error',
+        text2: errorMessage,
+        position: 'top',
+        visibilityTime: 3000,
+      });
+      return false;
+    }
+
+    return true;
   };
 
   const handleSave = async () => {
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      return;
+    }
 
-    setIsSaving(true);
-    // API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setIsSaving(false);
-    setShowSuccessMessage(true);
-    animateSuccess();
-    setTimeout(() => {
-      setShowSuccessMessage(false);
-      navigation.goBack();
-    }, 2000);
+    try {
+      setIsSaving(true);
+
+      const Batch_id = await AsyncStorage.getItem('batch_id');
+      if (!Batch_id) {
+        console.warn('Batch_id is not available!');
+        setIsSaving(false);
+
+        Toast.show({
+          type: 'error',
+          text1: 'Missing Information',
+          text2: 'Batch ID is not available',
+        });
+
+        return;
+      }
+
+      await new Promise(resolve => {
+        setNote(prev => ({
+          ...prev,
+          batchId: Batch_id,
+        }));
+        resolve();
+      });
+
+      let newAttachmentUrls = [];
+      if (attachmentsToUpload.length > 0) {
+        newAttachmentUrls = await Promise.all(
+          attachmentsToUpload.map(attachment => uploadSingleFile(attachment)),
+        );
+
+        newAttachmentUrls = newAttachmentUrls.filter(url => url !== undefined);
+
+        const failedUploads =
+          attachmentsToUpload.length - newAttachmentUrls.length;
+        if (failedUploads > 0) {
+          Toast.show({
+            type: 'info',
+            text1: 'Attachment Issue',
+            text2: `${failedUploads} attachment(s) failed to upload`,
+          });
+        }
+      }
+
+      let currentAttachmentUrls = [];
+      if (isEditMode) {
+        currentAttachmentUrls = existingAttachments
+          .filter(attachment => !removedAttachments.includes(attachment.uri))
+          .map(attachment => attachment.uri);
+      }
+
+      const updatedNote = {
+        ...note,
+        batchId: Batch_id,
+        listUrls: [...currentAttachmentUrls, ...newAttachmentUrls],
+      };
+
+      setNote(updatedNote);
+
+      if (isEditMode) {
+        await Note_Update(updatedNote);
+      } else {
+        await Note_Submit(updatedNote);
+      }
+
+      setIsSaving(false);
+      setShowSuccessMessage(true);
+      animateSuccess();
+      setTimeout(() => setShowSuccessMessage(false), 3000);
+    } catch (error) {
+      console.error('Error during save:', error.message);
+      setIsSaving(false);
+
+      Toast.show({
+        type: 'error',
+        text1: 'Save Failed',
+        text2: error.message || 'An unexpected error occurred',
+      });
+    }
   };
 
   const handleAttachments = async () => {
@@ -87,55 +226,218 @@ const NoteCreateScreen = ({navigation}) => {
         type: ['*/*'],
       });
 
-      if (result) {
-        console.log('Document selected:', result);
-        let size = result[0].size;
-        attachmentValidation(size);
+      if (result && result.length > 0) {
+        const newFiles = result
+          .map(file => ({
+            uri:
+              Platform.OS === 'android'
+                ? file.uri
+                : file.uri.replace('file://', ''),
+            type: file.type || 'application/pdf',
+            name: file.name || 'file.pdf',
+            size: file.size,
+            isExisting: false,
+          }))
+          .filter(file => attachmentValidation(file.size));
 
-        setNote(prev => ({
-          ...prev,
-          attachments: [
-            ...(prev.attachments || []),
-            ...(Array.isArray(result) ? result : [result]),
-          ],
-        }));
+        if (newFiles.length === 0) {
+          return;
+        }
+
+        setAttachmentList(prev => [...prev, ...newFiles]);
+        setAttachmentsToUpload(prev => [...prev, ...newFiles]);
+
+        Toast.show({
+          type: 'success',
+          text1: 'Attachments Added',
+          text2: `${newFiles.length} file(s) ready to upload`,
+          position: 'bottom',
+          visibilityTime: 2000,
+        });
       }
     } catch (error) {
-      if (error.message === 'User canceled') {
-        console.log('User canceled the picker');
-      } else {
-        console.error('Document Picker Error:', error);
-      }
+      console.error('Document Picker Error:', error);
+
+      Toast.show({
+        type: 'error',
+        text1: 'Attachment Error',
+        text2: 'Failed to select documents',
+      });
     }
   };
 
-  const renderAttachment = (item, index) => {
-    const isPDF = item.type === 'application/pdf';
+  const uploadSingleFile = async fileData => {
+    try {
+      console.log('Uploading file...', fileData.name);
 
-    return (
-      <View key={index} style={styles.attachmentItem}>
-        <MaterialIcons
-          name={isPDF ? 'picture-as-pdf' : 'image'}
-          size={20}
-          color="#6B7280"
-        />
-        <Text style={styles.attachmentName} numberOfLines={1}>
-          {item.name}
-        </Text>
-        <TouchableOpacity
-          onPress={() => {
-            const newErrors = {};
-            const newAttachments = [...note.attachments];
-            newAttachments.splice(index, 1);
-            setNote(prev => ({...prev, attachments: newAttachments}));
-            setErrors(newErrors);
-          }}
-          style={styles.removeAttachment}>
-          <MaterialIcons name="close" size={20} color="#EF4444" />
-        </TouchableOpacity>
-      </View>
-    );
+      const Token = await AsyncStorage.getItem('Token');
+
+      const formData = new FormData();
+      formData.append('file', fileData);
+
+      const userId = await AsyncStorage.getItem('TeacherId');
+
+      formData.append('userType', 'TEACHER');
+      formData.append('userId', userId);
+      formData.append('uploadType', 'notes');
+
+      const url = `${base_url}uploads`;
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${Token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+        body: formData,
+      });
+
+      console.log('Status Code:', response.status);
+
+      const textResponse = await response.text();
+      console.log('Raw Response:', textResponse);
+
+      let responseData;
+      try {
+        responseData = JSON.parse(textResponse);
+      } catch (error) {
+        console.error('Error parsing JSON response:', error);
+        return undefined;
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          `Upload failed: ${responseData.message || 'Unknown error'}`,
+        );
+      }
+
+      console.log('Upload Successful!', responseData.url);
+      return responseData.url;
+    } catch (error) {
+      console.error('Error during file upload:', error.message);
+      return undefined;
+    }
   };
+
+  const Note_Submit = async noteData => {
+    const Token = await AsyncStorage.getItem('Token');
+    const url = `notes`;
+    const headers = {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${Token}`,
+    };
+
+    const body = noteData;
+
+    const filteredData = Object.fromEntries(
+      Object.entries(body).filter(
+        ([_, value]) => value !== '' && value !== null && value !== undefined,
+      ),
+    );
+
+    const onResponse = res => {
+      setNote(res);
+      Toast.show({
+        type: 'success',
+        text1: 'New Note',
+        text2: 'Created Successfully',
+        position: 'top',
+        visibilityTime: 3000,
+      });
+      navigation.goBack();
+    };
+
+    const onCatch = res => {
+      Toast.show({
+        type: 'error',
+        text1: 'Failed',
+        text2: 'Note creation failed',
+        position: 'top',
+        visibilityTime: 3000,
+      });
+      console.log('Error', res);
+    };
+
+    postApi(url, headers, body, onResponse, onCatch, navigation);
+  };
+
+  const Note_Update = async noteData => {
+    const Token = await AsyncStorage.getItem('Token');
+    const url = `notes/${noteData.id}`;
+    const headers = {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${Token}`,
+    };
+
+    const payload = {
+      Title: noteData.Title,
+      publishDate: noteData.publishDate,
+      content: noteData.content,
+      listUrls: noteData.listUrls,
+      batchId: noteData.batchId,
+    };
+
+    const onResponse = res => {
+      setNote(res);
+      Toast.show({
+        type: 'success',
+        text1: 'Note',
+        text2: 'Updated Successfully',
+        position: 'top',
+        visibilityTime: 3000,
+      });
+      navigation.goBack();
+    };
+
+    const onCatch = res => {
+      Toast.show({
+        type: 'error',
+        text1: 'Failed',
+        text2: 'Note update failed',
+        position: 'top',
+        visibilityTime: 3000,
+      });
+      console.log('Error', res);
+    };
+
+    putapi(url, headers, payload, onResponse, onCatch, navigation);
+  };
+
+  const handleRemoveAttachment = (index, item) => {
+    if (item.isExisting) {
+      setRemovedAttachments(prev => [...prev, item.uri]);
+    } else {
+      setAttachmentsToUpload(prev =>
+        prev.filter(attachment => attachment.uri !== item.uri),
+      );
+    }
+
+    setAttachmentList(prev => prev.filter((_, i) => i !== index));
+
+    Toast.show({
+      type: 'info',
+      text1: 'Attachment Removed',
+      text2: item.name,
+      position: 'bottom',
+      visibilityTime: 2000,
+    });
+  };
+
+  const renderAttachmentItem = (item, index) => (
+    <View style={styles.attachmentItem} key={index}>
+      <MaterialIcons name="attachment" size={20} color="#6B7280" />
+      <Text style={styles.attachmentName} numberOfLines={1}>
+        {item.name}
+      </Text>
+      <TouchableOpacity
+        onPress={() => handleRemoveAttachment(index, item)}
+        style={styles.removeAttachment}>
+        <MaterialIcons name="close" size={20} color="#EF4444" />
+      </TouchableOpacity>
+    </View>
+  );
 
   return (
     <View style={styles.screen}>
@@ -144,7 +446,9 @@ const NoteCreateScreen = ({navigation}) => {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <MaterialIcons name="arrow-back" size={24} color="#001d3d" />
         </TouchableOpacity>
-        <Text style={styles.appBarTitle}>Create Note</Text>
+        <Text style={styles.appBarTitle}>
+          {isEditMode ? 'Edit Note' : 'Create Note'}
+        </Text>
         <View style={{width: 24}} />
       </View>
 
@@ -152,21 +456,14 @@ const NoteCreateScreen = ({navigation}) => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.container}>
         <ScrollView style={styles.scrollView}>
-          {showSuccessMessage && (
-            <Animated.View style={[styles.successMessage, {opacity: fadeAnim}]}>
-              <MaterialIcons name="check-circle" size={24} color="#059669" />
-              <Text style={styles.successText}>Note saved successfully</Text>
-            </Animated.View>
-          )}
-
           <View style={styles.formContainer}>
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Title *</Text>
               <TextInput
                 style={[styles.input, errors.title && styles.inputError]}
-                value={note.title}
+                value={note.Title}
                 onChangeText={text => {
-                  setNote(prev => ({...prev, title: text}));
+                  setNote(prev => ({...prev, Title: text}));
                   if (errors.title) {
                     setErrors(prev => ({...prev, title: undefined}));
                   }
@@ -180,39 +477,47 @@ const NoteCreateScreen = ({navigation}) => {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Description</Text>
+              <Text style={styles.label}>Description *</Text>
               <TextInput
-                style={[styles.input, styles.textArea]}
-                value={note.description}
-                onChangeText={text =>
-                  setNote(prev => ({...prev, description: text}))
-                }
+                style={[
+                  styles.input,
+                  styles.textArea,
+                  errors.content && styles.inputError,
+                ]}
+                value={note.content}
+                onChangeText={text => {
+                  setNote(prev => ({...prev, content: text}));
+                  if (errors.content) {
+                    setErrors(prev => ({...prev, content: undefined}));
+                  }
+                }}
                 placeholder="Enter note description"
                 placeholderTextColor="#9CA3AF"
                 multiline
                 numberOfLines={4}
                 textAlignVertical="top"
               />
+              {errors.content && (
+                <Text style={styles.errorText}>{errors.content}</Text>
+              )}
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Attachment</Text>
+              <Text style={styles.label}>Attachments</Text>
               <TouchableOpacity
                 style={styles.attachmentButton}
                 onPress={handleAttachments}>
                 <MaterialIcons name="attach-file" size={24} color="#6B7280" />
-                <Text style={styles.attachmentButtonText}>
-                  Add PDF or Image (max 2MB)
-                </Text>
+                <Text style={styles.attachmentButtonText}>Add Attachments</Text>
               </TouchableOpacity>
-
-              {note.attachments.map((item, index) =>
-                renderAttachment(item, index),
-              )}
-
-              {errors.attachment && (
-                <Text style={styles.errorText}>{errors.attachment}</Text>
-              )}
+              <View style={styles.attachmentsList}>
+                {attachmentList.map((item, index) =>
+                  renderAttachmentItem(item, index),
+                )}
+                {errors.attachment && (
+                  <Text style={styles.errorText}>{errors.attachment}</Text>
+                )}
+              </View>
             </View>
           </View>
         </ScrollView>
@@ -226,12 +531,7 @@ const NoteCreateScreen = ({navigation}) => {
 
           <TouchableOpacity
             style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
-            onPress={
-              // handleSave
-              () => {
-                console.log(note);
-              }
-            }
+            onPress={handleSave}
             disabled={isSaving}>
             {isSaving ? (
               <ActivityIndicator color="#FFFFFF" />
