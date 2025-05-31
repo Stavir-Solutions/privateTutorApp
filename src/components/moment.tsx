@@ -5,4 +5,9 @@ const dateconvert = date => {
   return formattedDate;
 };
 
+export const currentdate = () => {
+  const currentDate = moment().utc().format('YYYY-MM-DDTHH:mm:ss.SSS[Z]');
+  return currentDate;
+};
+
 export default dateconvert;
