@@ -16,6 +16,9 @@ import LinearGradient from 'react-native-linear-gradient';
 import {useDispatch} from 'react-redux';
 import {postApi} from '../utils/api';
 import {login} from '../utils/authslice';
+import {getUserId, getUserName, Token_decode} from '../utils/TokenDecoder';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {base_url} from '../utils/store';
 
 const LoginScreen = ({navigation}) => {
   const [username, setUsername] = useState('');
@@ -50,7 +53,97 @@ const LoginScreen = ({navigation}) => {
     return isValid;
   };
 
+  // const Teacher_Login = async () => {
+  //   if (!validateForm()) {
+  //     return;
+  //   }
+
+  //   setLoading(true);
+  //   setErrors({ ...errors, general: '' });
+
+  //   const url = 'login/teacher';
+  //   const headers = {
+  //     Accept: 'application/json',
+  //     'Content-Type': 'application/json',
+  //   };
+  //   const body = {
+  //     userName: username.trim(),
+  //     password: password,
+  //   };
+
+  //   const onResponse = async (res) => {
+  //     setLoading(false);
+  //     const Teacherid = await getUserId(res.token);
+  //     const Teachername = await getUserName(res.token);
+  //     console.log("errorsss")
+
+  //     if (res.token && res.refreshToken) {
+
+  //       await AsyncStorage.setItem('Token', res.token);
+  //       await AsyncStorage.setItem('RefreshToken', res.refreshToken);
+  //       await AsyncStorage.setItem('TeacherId', Teacherid);
+  //       await AsyncStorage.setItem('TeacherName', Teachername);
+
+  //       const userData = {
+  //         token: res.token,
+  //         refreshToken: res.refreshToken,
+  //         Teacher_id: Teacherid,
+  //         Teacher_name:Teachername
+  //       };
+  //       console.log('userData', userData);
+
+  //       dispatch(login(userData));
+  //       navigation.replace('Tabs');
+  //     } else if (res.token) {
+
+  //       await AsyncStorage.setItem('Token', res.token);
+  //       await AsyncStorage.setItem('TeacherId', Teacherid);
+  //       await AsyncStorage.setItem('TeacherName', Teachername);
+
+  //       const userData = {
+  //         token: res.token,
+  //         Teacher_id: Teacherid,
+  //         Teacher_name:Teachername
+  //       };
+  //       console.log('userData', userData);
+
+  //       dispatch(login(userData));
+  //       navigation.replace('Tabs');
+  //     } else if (res.error) {
+  //       setErrors({ ...errors, general: res.error });
+  //     } else {
+  //       setErrors({ ...errors, general: 'Invalid response from server' });
+  //     }
+  //   };
+
+  //   const onCatch = (error) => {
+  //     setLoading(false);
+  //     console.log("error und")
+  //     console.log('Error:', error);
+  //     if (error.response?.status === 401) {
+  //       setErrors({ ...errors, general: 'Invalid username or password' });
+  //     } else {
+  //       setErrors({
+  //         ...errors,
+  //         general: 'An error occurred. Please try again later',
+  //       });
+  //       console.log('Error:', error);
+  //     }
+  //   };
+
+  //   try {
+  //     await postApi(url, headers, body, onResponse, onCatch);
+  //   } catch (error) {
+  //     setLoading(false);
+  //     setErrors({
+  //       ...errors,
+  //       general: 'Network error.',
+  //     });
+  //   }
+  // };
+
   const Teacher_Login = async () => {
+    console.log('nhj');
     if (!validateForm()) {
       return;
     }
@@ -58,7 +151,7 @@ const LoginScreen = ({navigation}) => {
     setLoading(true);
     setErrors({...errors, general: ''});
 
-    const url = 'login/teacher';
+    const url = `${base_url}/login/teacher`;
     const headers = {
       Accept: 'application/json',
       'Content-Type': 'application/json',
@@ -68,15 +161,48 @@ const LoginScreen = ({navigation}) => {
       password: password,
     };
 
-    const onResponse = res => {
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(body),
+      });
+
+      const res = await response.json();
       setLoading(false);
-      console.log(res.error);
-      if (res.token) {
+
+      const Teacherid = await getUserId(res.token);
+      const Teachername = await getUserName(res.token);
+      console.log('res', res);
+      if (response.ok && res.token && res.refreshToken) {
+        console.log('yess');
+        await AsyncStorage.setItem('Token', res.token);
+        await AsyncStorage.setItem('RefreshToken', res.refreshToken);
+        await AsyncStorage.setItem('TeacherId', Teacherid);
+        await AsyncStorage.setItem('TeacherName', Teachername);
+
         const userData = {
-          token: `${res.token}`,
+          token: res.token,
+          refreshToken: res.refreshToken,
+          Teacher_id: Teacherid,
+          Teacher_name: Teachername,
         };
-        console.log(userData);
-        console.log('token', res.token);
+        console.log('userData', userData);
+
+        dispatch(login(userData));
+        navigation.replace('Tabs');
+      } else if (response.ok && res.token) {
+        await AsyncStorage.setItem('Token', res.token);
+        await AsyncStorage.setItem('TeacherId', Teacherid);
+        await AsyncStorage.setItem('TeacherName', Teachername);
+
+        const userData = {
+          token: res.token,
+          Teacher_id: Teacherid,
+          Teacher_name: Teachername,
+        };
+        console.log('userData', userData);
+
         dispatch(login(userData));
         navigation.replace('Tabs');
       } else if (res.error) {
@@ -84,11 +210,10 @@ const LoginScreen = ({navigation}) => {
       } else {
         setErrors({...errors, general: 'Invalid response from server'});
       }
-    };
-
-    const onCatch = error => {
+    } catch (error) {
       setLoading(false);
-      console.log('Error:', error);
+      console.log('Fetch Error:', error);
+
       if (error.response?.status === 401) {
         setErrors({...errors, general: 'Invalid username or password'});
       } else {
@@ -97,16 +222,6 @@ const LoginScreen = ({navigation}) => {
           general: 'An error occurred. Please try again later',
         });
       }
-    };
-
-    try {
-      await postApi(url, headers, body, onResponse, onCatch);
-    } catch (error) {
-      setLoading(false);
-      setErrors({
-        ...errors,
-        general: 'Network error.',
-      });
     }
   };
 
@@ -219,7 +334,13 @@ const LoginScreen = ({navigation}) => {
             <View style={styles.signupContainer}>
               <Text style={styles.signupText}>Don't have an account? </Text>
               <TouchableOpacity
-                onPress={() => navigation.navigate('SignUp')}
+                onPress={() => {
+                  setLoading(true);
+                  setTimeout(() => {
+                    navigation.replace('SignUp');
+                    setLoading(false);
+                  }, 100);
+                }}
                 disabled={loading}>
                 <Text style={styles.signupLinkText}>Sign Up</Text>
               </TouchableOpacity>
@@ -325,6 +446,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#001d3d',
     borderRadius: 10,
     padding: 15,
+    marginTop: 10,
     alignItems: 'center',
     marginBottom: 20,
   },
