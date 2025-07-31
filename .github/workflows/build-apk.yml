@@ -16,8 +16,8 @@ jobs:
         run: echo "VERSION=1.0.${{ github.run_number }}" >> $GITHUB_ENV
 
       - name: Print version
-        run: echo "VERSION:$VERSION"
-
+        run: echo "VERSION=${VERSION}"
+        
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
