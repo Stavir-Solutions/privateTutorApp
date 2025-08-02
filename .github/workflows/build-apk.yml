@@ -2,27 +2,23 @@ name: Build APK
 
 on:
   workflow_dispatch
+
 jobs:
   build:
     name: Build Android APK
     runs-on: ubuntu-latest
-    env:
-      VERSION: '1.0.${{github.run_number}}'
-      AWS_REGION: "us-east-1"
-      AWS_S3_BUCKET: "parentteacherconnetappreleases"
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Print environment variables
-        run: |
-          echo "VERSION: $VERSION"
-          echo "AWS_REGION: $AWS_REGION"
-          echo "AWS_S3_BUCKET: $AWS_S3_BUCKET"
+      - name: Set VERSION env variable
+        id: versioning
+        run: echo "VERSION=1.0.${{ github.run_number }}" >> $GITHUB_ENV
 
+      - name: Print version
+        run: echo "VERSION is $VERSION"
+        
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
@@ -48,14 +44,19 @@ jobs:
           cd android
           ./gradlew assembleRelease
 
-      - name: Upload APK to S3
+      - name: Rename APK
         run: |
           FILE_NAME="TeacherToParent.${VERSION}.apk"
-          cp android/app/build/outputs/apk/release/app-release.apk $FILE_NAME
-          aws s3 cp "$FILE_NAME" "s3://$AWS_S3_BUCKET/" --region "$AWS_REGION"
-          echo "APK uploaded as: $FILE_NAME"
+          cp android/app/build/outputs/apk/release/app-release.apk "$FILE_NAME"
+          echo "APK_NAME=$FILE_NAME" >> $GITHUB_ENV
 
-      - name: Output APK download link
+      - name: Upload APK as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APK_NAME }}
+          path: ${{ env.APK_NAME }}
+
+      - name: Output Summary
         run: |
-          echo "APK version: $VERSION" >> $GITHUB_STEP_SUMMARY
-          echo "Download Link: https://${AWS_S3_BUCKET}.s3.${AWS_REGION}.amazonaws.com/TeacherToParent.${VERSION}.apk" >> $GITHUB_STEP_SUMMARY
+          echo " APK version: $VERSION" >> $GITHUB_STEP_SUMMARY
+          echo " Artifact name: $APK_NAME" >> $GITHUB_STEP_SUMMARY
