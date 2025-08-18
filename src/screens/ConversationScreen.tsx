@@ -15,17 +15,17 @@ import {
   RefreshControl,
   Linking,
 } from 'react-native';
-import React, {useEffect, useRef, useState} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import {getapi, patchApi, postApi} from '../utils/api';
+import { getapi, patchApi, postApi } from '../utils/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {pick} from '@react-native-documents/picker';
-import {base_url} from '../utils/store';
+import { pick } from '@react-native-documents/picker';
+import { base_url } from '../utils/store';
 
-const ConversationScreen = ({route, navigation}) => {
-  const {deeplink, conversationId} = route?.params;
+const ConversationScreen = ({ route, navigation }) => {
+  const { deeplink, conversationId } = route?.params;
   const [createmessage, setcreate] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -94,7 +94,7 @@ const ConversationScreen = ({route, navigation}) => {
           animated: false,
         });
       } else {
-        flatListRef.current.scrollToEnd({animated: false});
+        flatListRef.current.scrollToEnd({ animated: false });
       }
     }
   }, [conversationId]);
@@ -108,7 +108,7 @@ const ConversationScreen = ({route, navigation}) => {
             animated: true,
           });
         } else {
-          flatListRef.current.scrollToEnd({animated: true});
+          flatListRef.current.scrollToEnd({ animated: true });
         }
       }, 100);
     }
@@ -166,7 +166,7 @@ const ConversationScreen = ({route, navigation}) => {
 
             setTimeout(() => {
               if (flatListRef.current) {
-                flatListRef.current.scrollToEnd({animated: true});
+                flatListRef.current.scrollToEnd({ animated: true });
               }
             }, 100);
           }
@@ -257,7 +257,7 @@ const ConversationScreen = ({route, navigation}) => {
 
   const formatTime = dateString => {
     const date = new Date(dateString);
-    return date.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
   const formatDate = dateString => {
@@ -478,7 +478,7 @@ const ConversationScreen = ({route, navigation}) => {
       setFormData(null);
 
       setTimeout(() => {
-        flatListRef.current?.scrollToEnd({animated: true});
+        flatListRef.current?.scrollToEnd({ animated: true });
       }, 100);
 
       console.log(conversationId);
@@ -601,7 +601,7 @@ const ConversationScreen = ({route, navigation}) => {
         content: messageContent,
         timestamp: new Date().toISOString(),
         attachmentUrls: attachmentUrls,
-        receiverName: student.userName,
+        receiverName: student?.firstName ? student?.firstName + student?.lastName : student?.userName,
         receiverType: 'STUDENT',
         receiver: student.id,
         batchId: Batch_id,
@@ -613,7 +613,7 @@ const ConversationScreen = ({route, navigation}) => {
       setFormData(null);
 
       setTimeout(() => {
-        flatListRef.current?.scrollToEnd({animated: true});
+        flatListRef.current?.scrollToEnd({ animated: true });
       }, 100);
 
       const Token = await AsyncStorage.getItem('Token');
@@ -632,7 +632,7 @@ const ConversationScreen = ({route, navigation}) => {
         content: messageContent,
         timestamp: new Date().toISOString(),
         attachmentUrls: attachmentUrls,
-        receiverName: student.userName,
+        receiverName: student?.firstName ? student?.firstName +" " + student?.lastName : student?.userName,
         receiverType: 'STUDENT',
         receiver: student.id,
         batchId: Batch_id,
@@ -647,7 +647,7 @@ const ConversationScreen = ({route, navigation}) => {
         if (res && res.id) {
           setMessages(prevMessages =>
             prevMessages.map(msg =>
-              msg === newMessageObj ? {...msg, id: res.id} : msg,
+              msg === newMessageObj ? { ...msg, id: res.id } : msg,
             ),
           );
 
@@ -676,7 +676,7 @@ const ConversationScreen = ({route, navigation}) => {
         );
         setNewMessage(messageContent);
       };
-
+    
       postApi(url, headers, data, onResponse, onCatch, navigation);
     } catch (error) {
       console.error('Exception when sending message:', error);
@@ -694,8 +694,8 @@ const ConversationScreen = ({route, navigation}) => {
       'Attachment',
       typeof url === 'string' ? url.split('/').pop() : url.name || 'Attachment',
       [
-        {text: 'Download', onPress: () => Linking.openURL(url)},
-        {text: 'Cancel', style: 'cancel'},
+        { text: 'Download', onPress: () => Linking.openURL(url) },
+        { text: 'Cancel', style: 'cancel' },
       ],
     );
   };
@@ -709,8 +709,9 @@ const ConversationScreen = ({route, navigation}) => {
       setFormData(null);
     }
   };
+  
 
-  const renderItem = ({item}) => {
+  const renderItem = ({ item }) => {
     if (item.type === 'date') {
       return (
         <View style={styles.dateContainer}>
@@ -720,6 +721,112 @@ const ConversationScreen = ({route, navigation}) => {
     }
 
     const isCurrentUser = isFromCurrentUser(item.sender);
+       const getFilenameFromUrl = url => {
+      try {
+        const decodedUrl = decodeURIComponent(url);
+        const filename = decodedUrl.split('/').pop();
+        if (filename && filename.includes('.') && filename.length > 2) {
+          return filename;
+        }
+        const fileExtension = url.split('.').pop().toLowerCase();
+        const fileTypes = {
+          pdf: 'PDF Document',
+          doc: 'Word Document',
+          docx: 'Word Document',
+          xls: 'Excel Spreadsheet',
+          xlsx: 'Excel Spreadsheet',
+          ppt: 'PowerPoint',
+          pptx: 'PowerPoint',
+          txt: 'Text File',
+          zip: 'Zip Archive',
+          rar: 'RAR Archive',
+          mp3: 'Audio File',
+          mp4: 'Video File',
+        };
+        return fileTypes[fileExtension] || `File.${fileExtension}`;
+      } catch (e) {
+        return 'Attachment';
+      }
+    };
+
+    const getFileIcon = url => {
+      const fileExtension = url.split('.').pop().toLowerCase();
+      switch (fileExtension) {
+        case 'pdf':
+          return (
+            <MaterialIcons
+              name="picture-as-pdf"
+              size={20}
+              color={isCurrentUser ? '#fff' : '#5C6BC0'}
+            />
+          );
+        case 'doc':
+        case 'docx':
+          return (
+            <MaterialIcons
+              name="description"
+              size={20}
+              color={isCurrentUser ? '#fff' : '#5C6BC0'}
+            />
+          );
+        case 'xls':
+        case 'xlsx':
+          return (
+            <MaterialIcons
+              name="table-chart"
+              size={20}
+              color={isCurrentUser ? '#fff' : '#5C6BC0'}
+            />
+          );
+        case 'ppt':
+        case 'pptx':
+          return (
+            <MaterialIcons
+              name="slideshow"
+              size={20}
+              color={isCurrentUser ? '#fff' : '#5C6BC0'}
+            />
+          );
+        case 'zip':
+        case 'rar':
+          return (
+            <MaterialIcons
+              name="folder-zip"
+              size={20}
+              color={isCurrentUser ? '#fff' : '#5C6BC0'}
+            />
+          );
+        case 'mp3':
+        case 'wav':
+        case 'ogg':
+          return (
+            <MaterialIcons
+              name="audiotrack"
+              size={20}
+              color={isCurrentUser ? '#fff' : '#5C6BC0'}
+            />
+          );
+        case 'mp4':
+        case 'mov':
+        case 'avi':
+          return (
+            <MaterialIcons
+              name="movie"
+              size={20}
+              color={isCurrentUser ? '#fff' : '#5C6BC0'}
+            />
+          );
+        default:
+          return (
+            <MaterialIcons
+              name="insert-drive-file"
+              size={20}
+              color={isCurrentUser ? '#fff' : '#5C6BC0'}
+            />
+          );
+      }
+    };
+
 
     return (
       <View
@@ -743,28 +850,30 @@ const ConversationScreen = ({route, navigation}) => {
               {item.attachmentUrls.map((url, index) => (
                 <TouchableOpacity
                   key={index}
-                  disabled={url.match(/\.(jpeg|jpg|gif|png)$/) ? true : false}
+                  // disabled={url.match(/\.(jpeg|jpg|gif|png)$/) ? true : false}
                   style={styles.attachment}
                   onPress={() => handleOpenAttachment(url)}>
                   {url.match(/\.(jpeg|jpg|gif|png)$/) ? (
                     <Image
-                      source={{uri: url}}
+                      source={{ uri: url }}
                       style={styles.attachmentImage}
                       resizeMode="cover"
                     />
                   ) : (
-                    <>
-                      <MaterialIcons
-                        name="attachment"
-                        size={20}
-                        color="#001d3d"
-                      />
-                      <Text style={styles.attachmentText}>
-                        {typeof url === 'string'
-                          ? url.split('/').pop()
-                          : url.name || 'Attachment'}
+                    <View style={styles.fileAttachmentContainer}>
+                      {getFileIcon(url)}
+                      <Text
+                        style={[
+                          styles.attachmentText,
+                          isCurrentUser
+                            ? styles.userAttachmentText
+                            : styles.otherAttachmentText,
+                        ]}
+                        numberOfLines={1}
+                        ellipsizeMode="middle">
+                        {getFilenameFromUrl(url)}
                       </Text>
-                    </>
+                    </View>
                   )}
                 </TouchableOpacity>
               ))}
@@ -791,10 +900,10 @@ const ConversationScreen = ({route, navigation}) => {
         <View style={styles.appBarTitle}>
           <Text style={styles.conversationSubject}>
             {createmessage
-              ? student.userName
+              ? student?.firstName ? student?.firstName +" " + student?.lastName : student?.userName
               : conversationData?.sender === teacherId
-              ? conversationData?.receiverName
-              : conversationData?.senderName}
+                ? conversationData?.receiverName
+                : conversationData?.senderName}
           </Text>
         </View>
         <TouchableOpacity onPress={() => console.log('More options')}>
@@ -841,7 +950,7 @@ const ConversationScreen = ({route, navigation}) => {
                 color="#bdbdbd"
               />
               <Text style={styles.emptyConversationText}>
-                Start a conversation with {student.userName}
+                Start a conversation with {student?.firstName ? student?.firstName +" " + student?.lastName : student?.userName}
               </Text>
               <Text style={styles.emptyConversationSubtext}>
                 Send a message to begin chatting
@@ -850,7 +959,7 @@ const ConversationScreen = ({route, navigation}) => {
           )}
           onLayout={() => {
             if (messages.length > 0 && flatListRef.current) {
-              flatListRef.current.scrollToEnd({animated: false});
+              flatListRef.current.scrollToEnd({ animated: false });
             }
           }}
         />
@@ -882,7 +991,7 @@ const ConversationScreen = ({route, navigation}) => {
           }
           onContentSizeChange={() => {
             if (flatListRef.current) {
-              flatListRef.current.scrollToEnd({animated: true});
+              flatListRef.current.scrollToEnd({ animated: true });
             }
           }}
         />
@@ -893,7 +1002,7 @@ const ConversationScreen = ({route, navigation}) => {
           <FlatList
             data={selectedAttachments}
             horizontal
-            renderItem={({item, index}) => (
+            renderItem={({ item, index }) => (
               <View style={styles.selectedAttachment}>
                 <Text style={styles.selectedAttachmentText} numberOfLines={1}>
                   {item.name ||
@@ -932,7 +1041,7 @@ const ConversationScreen = ({route, navigation}) => {
             styles.sendButton,
             ((newMessage.trim() === '' && selectedAttachments.length === 0) ||
               sendingMessage) &&
-              styles.sendButtonDisabled,
+            styles.sendButtonDisabled,
           ]}
           disabled={
             (newMessage.trim() === '' && selectedAttachments.length === 0) ||
@@ -1179,7 +1288,7 @@ const styles = StyleSheet.create({
     zIndex: 1000,
     elevation: 5,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
   },
@@ -1193,5 +1302,17 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 4,
+  },
+    fileAttachmentContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+  },
+
+  userAttachmentText: {
+    color: '#fff',
+  },
+  otherAttachmentText: {
+    color: '#5C6BC0',
   },
 });

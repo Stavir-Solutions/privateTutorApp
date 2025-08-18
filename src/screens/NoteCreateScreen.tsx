@@ -102,21 +102,24 @@ const NoteCreateScreen = ({navigation, route}) => {
     if (!note.Title.trim()) {
       newErrors.title = 'Title is required';
     }
-    if (!note.content.trim()) {
-      newErrors.content = 'Description is required';
-    }
+    // if (!note.content.trim()) {
+    //   newErrors.content = 'Description is required';
+    // }
 
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length > 0) {
       let errorMessage = '';
-      if (newErrors.title && newErrors.content) {
-        errorMessage = 'Title and Description are required';
-      } else if (newErrors.title) {
+      // if (newErrors.title && newErrors.content) {
+      //   errorMessage = 'Title and Description are required';
+      // } 
+       if (newErrors.title) {
         errorMessage = 'Title is required';
-      } else if (newErrors.content) {
-        errorMessage = 'Description is required';
-      } else {
+      } 
+      // else if (newErrors.content) {
+      //   errorMessage = 'Description is required';
+      // } 
+      else {
         errorMessage = 'Please check the form fields';
       }
 
@@ -359,7 +362,7 @@ const NoteCreateScreen = ({navigation, route}) => {
       console.log('Error', res);
     };
 
-    postApi(url, headers, body, onResponse, onCatch, navigation);
+    postApi(url, headers, filteredData, onResponse, onCatch, navigation);
   };
 
   const Note_Update = async noteData => {
@@ -388,7 +391,7 @@ const NoteCreateScreen = ({navigation, route}) => {
         position: 'top',
         visibilityTime: 3000,
       });
-      navigation.goBack();
+      navigation.navigate("Notes");
     };
 
     const onCatch = res => {
@@ -477,7 +480,7 @@ const NoteCreateScreen = ({navigation, route}) => {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Description *</Text>
+              <Text style={styles.label}>Description </Text>
               <TextInput
                 style={[
                   styles.input,

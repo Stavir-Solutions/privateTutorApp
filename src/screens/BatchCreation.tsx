@@ -241,7 +241,9 @@ const BatchCreation = ({navigation, route}) => {
     multiline = false,
   ) => (
     <View style={styles.inputGroup}>
-      <Text style={styles.label}>{label} *</Text>
+      <Text style={styles.label}>
+      {label} {field !== 'description' && '*'}
+        </Text>
       <TextInput
         style={[
           styles.input,

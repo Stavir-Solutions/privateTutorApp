@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -13,14 +13,14 @@ import {
 } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 import LinearGradient from 'react-native-linear-gradient';
-import {useDispatch} from 'react-redux';
-import {postApi} from '../utils/api';
-import {login} from '../utils/authslice';
-import {getUserId, getUserName, Token_decode} from '../utils/TokenDecoder';
+import { useDispatch } from 'react-redux';
+import { postApi } from '../utils/api';
+import { login } from '../utils/authslice';
+import { getUserId, getUserName, Token_decode } from '../utils/TokenDecoder';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {base_url} from '../utils/store';
+import { base_url } from '../utils/store';
 
-const LoginScreen = ({navigation}) => {
+const LoginScreen = ({ navigation }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -149,7 +149,7 @@ const LoginScreen = ({navigation}) => {
     }
 
     setLoading(true);
-    setErrors({...errors, general: ''});
+    setErrors({ ...errors, general: '' });
 
     const url = `${base_url}/login/teacher`;
     const headers = {
@@ -206,16 +206,16 @@ const LoginScreen = ({navigation}) => {
         dispatch(login(userData));
         navigation.replace('Tabs');
       } else if (res.error) {
-        setErrors({...errors, general: res.error});
+        setErrors({ ...errors, general: res.error });
       } else {
-        setErrors({...errors, general: 'Invalid response from server'});
+        setErrors({ ...errors, general: 'Invalid response from server' });
       }
     } catch (error) {
       setLoading(false);
       console.log('Fetch Error:', error);
 
       if (error.response?.status === 401) {
-        setErrors({...errors, general: 'Invalid username or password'});
+        setErrors({ ...errors, general: 'Invalid username or password' });
       } else {
         setErrors({
           ...errors,
@@ -231,20 +231,21 @@ const LoginScreen = ({navigation}) => {
   };
 
   return (
-    <LinearGradient
-      colors={['#1D49A7', '#1D49A7', '#FFF']}
-      style={styles.container}>
-      <StatusBar backgroundColor="#1D49A7" barStyle="light-content" />
-      <View style={styles.logoContainer}>
-        <Image style={styles.logo} source={require('../resources/logo.png')} />
-        <Text style={styles.logotitle}>Smart Teacher</Text>
-      </View>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardContainer}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContainer}
-          keyboardShouldPersistTaps="handled">
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.keyboardContainer}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        keyboardShouldPersistTaps="handled">
+        <LinearGradient
+          colors={['#1D49A7', '#1D49A7', '#FFF']}
+          style={styles.container}>
+          <StatusBar backgroundColor="#1D49A7" barStyle="light-content" />
+          <View style={styles.logoContainer}>
+            <Image style={styles.logo} source={require('../resources/logo.png')} />
+            <Text style={styles.logotitle}>Smart Teacher</Text>
+          </View>
+
           <View style={styles.glassContainer}>
             <Text style={styles.title}>Welcome Back!</Text>
             <Text style={styles.subtitle}>
@@ -271,7 +272,7 @@ const LoginScreen = ({navigation}) => {
                 value={username}
                 onChangeText={text => {
                   setUsername(text);
-                  setErrors({...errors, username: '', general: ''});
+                  setErrors({ ...errors, username: '', general: '' });
                 }}
                 autoCapitalize="none"
                 editable={!loading}
@@ -298,7 +299,7 @@ const LoginScreen = ({navigation}) => {
                 value={password}
                 onChangeText={text => {
                   setPassword(text);
-                  setErrors({...errors, password: '', general: ''});
+                  setErrors({ ...errors, password: '', general: '' });
                 }}
                 editable={!loading}
               />
@@ -346,15 +347,17 @@ const LoginScreen = ({navigation}) => {
               </TouchableOpacity>
             </View>
           </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </LinearGradient>
+        </LinearGradient>
+      </ScrollView>
+    </KeyboardAvoidingView>
+
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+     paddingHorizontal: '5%',
   },
   logoContainer: {
     alignItems: 'center',
@@ -378,14 +381,14 @@ const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 0.5,
     justifyContent: 'center',
-    paddingHorizontal: '5%',
+   
   },
   glassContainer: {
     backgroundColor: '#ffff',
     borderRadius: 20,
     padding: 30,
     shadowColor: '#1D49A7',
-    shadowOffset: {width: 0, height: 10},
+    shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.1,
     shadowRadius: 20,
     elevation: 20,

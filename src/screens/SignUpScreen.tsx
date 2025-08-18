@@ -310,6 +310,12 @@ const SignupScreen = ({navigation}) => {
 
   return (
     <>
+       <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardContainer}>
+          <ScrollView
+            contentContainerStyle={styles.scrollContainer}
+            keyboardShouldPersistTaps="handled">
       <LinearGradient
         colors={['#1D49A7', '#1D49A7', '#FFF']}
         style={styles.container}>
@@ -321,12 +327,7 @@ const SignupScreen = ({navigation}) => {
           />
           <Text style={styles.logotitle}>Smart Teacher</Text>
         </View>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.keyboardContainer}>
-          <ScrollView
-            contentContainerStyle={styles.scrollContainer}
-            keyboardShouldPersistTaps="handled">
+     
             <View style={styles.glassContainer}>
               <Text style={styles.title}>Create Account</Text>
               <Text style={styles.subtitle}>Join Smart Teacher</Text>
@@ -454,9 +455,10 @@ const SignupScreen = ({navigation}) => {
                 </TouchableOpacity>
               </View>
             </View>
+             </LinearGradient>
           </ScrollView>
         </KeyboardAvoidingView>
-      </LinearGradient>
+     
       <Toast />
     </>
   );
@@ -465,6 +467,7 @@ const SignupScreen = ({navigation}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+      paddingHorizontal: '5%',
   },
   logoContainer: {
     alignItems: 'center',
@@ -488,7 +491,6 @@ const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
     justifyContent: 'center',
-    paddingHorizontal: '5%',
     paddingBottom: 30,
   },
   glassContainer: {
