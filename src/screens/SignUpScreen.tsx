@@ -458,8 +458,6 @@ const SignupScreen = ({navigation}) => {
              </LinearGradient>
           </ScrollView>
         </KeyboardAvoidingView>
-     
-      <Toast />
     </>
   );
 };
