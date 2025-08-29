@@ -76,14 +76,6 @@ const UpdateProfileScreen = ({navigation, route}) => {
     'age',
     'gender',
     'phoneNumber',
-    'addressLine1',
-    'addressCity',
-    'addressState',
-    'pinCode',
-    'accountNumber',
-    'accountName',
-    'ifscCode',
-    'upiId',
   ];
 
   const updateRequiredFields = update ? ['userName', 'email', 'password'] : [];
@@ -135,6 +127,12 @@ const UpdateProfileScreen = ({navigation, route}) => {
 
       if (result.success) {
         setProfileImage(result.uri);
+         Toast.show({
+          type: 'success',
+          text1: 'Success',
+          text2: 'Profile photo uploaded',
+          visibilityTime: 3000,
+        });
 
         setProfileData(prev => ({
           ...prev,
@@ -153,6 +151,12 @@ const UpdateProfileScreen = ({navigation, route}) => {
           ...prev,
           profilePicUrl: 'Failed to upload profile image. Please try again.',
         }));
+         Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Failed to upload image. Please try again.',
+          visibilityTime: 3000,
+        });
       }
     } catch (error) {
       console.error('Error in image picking/uploading:', error);
@@ -160,6 +164,12 @@ const UpdateProfileScreen = ({navigation, route}) => {
         ...prev,
         profilePicUrl: 'Error uploading image. Please try again.',
       }));
+       Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to upload image. Please try again.',
+        visibilityTime: 3000,
+      });
     } finally {
       setIsUploading(false);
     }
