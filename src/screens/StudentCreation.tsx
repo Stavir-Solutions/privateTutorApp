@@ -265,32 +265,34 @@ const StudentCreation = ({navigation, route}) => {
       }
     }
 
-    if (!student.password) {
-      newErrors.password = 'Password is required';
-      Toast.show({
-        type: 'error',
-        text1: 'Validation Error',
-        text2: 'Password is required',
-      });
-      isValid = false;
-    } else if (student.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
-      Toast.show({
-        type: 'error',
-        text1: 'Validation Error',
-        text2: 'Password must be at least 6 characters',
-      });
-      isValid = false;
-    }
+    if (!isEditMode) {
+      if (!student.password) {
+        newErrors.password = 'Password is required';
+        Toast.show({
+          type: 'error',
+          text1: 'Validation Error',
+          text2: 'Password is required',
+        });
+        isValid = false;
+      } else if (student.password.length < 6) {
+        newErrors.password = 'Password must be at least 6 characters';
+        Toast.show({
+          type: 'error',
+          text1: 'Validation Error',
+          text2: 'Password must be at least 6 characters',
+        });
+        isValid = false;
+      }
 
-    if (student.password !== student.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
-      Toast.show({
-        type: 'error',
-        text1: 'Validation Error',
-        text2: 'Passwords do not match',
-      });
-      isValid = false;
+      if (student.password !== student.confirmPassword) {
+        newErrors.confirmPassword = 'Passwords do not match';
+        Toast.show({
+          type: 'error',
+          text1: 'Validation Error',
+          text2: 'Passwords do not match',
+        });
+        isValid = false;
+      }
     }
 
     if (student.age && isNaN(student.age)) {
@@ -945,14 +947,15 @@ const StudentCreation = ({navigation, route}) => {
               true,
               true,
             )}
-            {renderInput(
-              'confirmPassword',
-              'Confirm Password',
-              'Confirm your password',
-              'default',
-              true,
-              true,
-            )}
+            {!isEditMode &&
+              renderInput(
+                'confirmPassword',
+                'Confirm Password',
+                'Confirm your password',
+                'default',
+                true,
+                true,
+              )}
           </View>
         </ScrollView>
 
