@@ -112,13 +112,13 @@ const NoteCreateScreen = ({navigation, route}) => {
       let errorMessage = '';
       // if (newErrors.title && newErrors.content) {
       //   errorMessage = 'Title and Description are required';
-      // } 
-       if (newErrors.title) {
+      // }
+      if (newErrors.title) {
         errorMessage = 'Title is required';
-      } 
+      }
       // else if (newErrors.content) {
       //   errorMessage = 'Description is required';
-      // } 
+      // }
       else {
         errorMessage = 'Please check the form fields';
       }
@@ -254,7 +254,6 @@ const NoteCreateScreen = ({navigation, route}) => {
           type: 'success',
           text1: 'Attachments Added',
           text2: `${newFiles.length} file(s) ready to upload`,
-          position: 'bottom',
           visibilityTime: 2000,
         });
       }
@@ -391,7 +390,7 @@ const NoteCreateScreen = ({navigation, route}) => {
         position: 'top',
         visibilityTime: 3000,
       });
-      navigation.navigate("Notes");
+      navigation.navigate('Notes');
     };
 
     const onCatch = res => {
