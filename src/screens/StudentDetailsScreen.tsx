@@ -117,11 +117,22 @@ const StudentDetailsScreen = ({route, navigation}) => {
               style={styles.addressIcon}
             />
             <View style={styles.addressContent}>
-              <Text style={styles.addressLine}>{student.addressLine1}</Text>
-              <Text style={styles.addressLine}>
-                {student.addressCity}, {student.addressState}
-              </Text>
-              <Text style={styles.pinCode}>PIN: {student.pinCode}</Text>
+              {student.addressLine1 ? (
+                <Text style={styles.addressLine}>{student.addressLine1}</Text>
+              ) : null}
+
+              {[student.addressCity, student.addressState].filter(Boolean)
+                .length > 0 ? (
+                <Text style={styles.addressLine}>
+                  {[student.addressCity, student.addressState]
+                    .filter(Boolean)
+                    .join(', ')}
+                </Text>
+              ) : null}
+
+              {student.pinCode ? (
+                <Text style={styles.pinCode}>PIN: {student.pinCode}</Text>
+              ) : null}
             </View>
           </LinearGradient>
         </View>
