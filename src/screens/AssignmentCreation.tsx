@@ -219,6 +219,13 @@ const CreateAssignment = ({navigation, route}) => {
 
         setAttachmentList(prev => [...prev, ...newFiles]);
         setAttachmentsToUpload(prev => [...prev, ...newFiles]);
+
+        Toast.show({
+          type: 'success',
+          text1: 'Attachments Added',
+          text2: `${newFiles.length} file(s) ready to upload`,
+          visibilityTime: 2000,
+        });
       }
     } catch (error) {
       console.error('Document Picker Error:', error);
@@ -375,7 +382,7 @@ const CreateAssignment = ({navigation, route}) => {
         text1: 'Assignment',
         text2: 'Updated Succecssfully',
       });
-      navigation.goBack();
+      navigation.navigate('Assignment');
     };
 
     const onCatch = res => {
@@ -535,18 +542,23 @@ const CreateAssignment = ({navigation, route}) => {
             display="default"
             onChange={(event, selectedDate) => {
               setShowDatePicker(false);
-              const formattedDate = moment(selectedDate ? selectedDate : '')
+              const formattedDate = moment(selectedDate)
+                .set({hour: 23, minute: 59, second: 59, millisecond: 999}) // local end of day
+                .toDate(); // JS Date object (local)
+
+              const finalDateUtc = moment(formattedDate)
                 .utc()
-                .set({hour: 23, minute: 59, second: 59, millisecond: 999})
                 .format('YYYY-MM-DDTHH:mm:ss.SSS[Z]');
 
               if (selectedDate) {
                 setAssignment(prev => ({
                   ...prev,
-                  submissionDate: formattedDate,
+                  submissionDate: finalDateUtc,
                 }));
                 setSubmitdate(selectedDate);
                 console.log(selectedDate.toLocaleDateString());
+                console.log('ash', finalDateUtc);
+                console.log(...assignment);
               }
             }}
           />
