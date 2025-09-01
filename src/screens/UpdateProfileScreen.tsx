@@ -69,14 +69,7 @@ const UpdateProfileScreen = ({navigation, route}) => {
   const [showPassword, setShowPassword] = useState(false);
   const [password, setPassword] = useState('');
 
-  const requiredFields = [
-    'firstName',
-    'lastName',
-    'email',
-    'age',
-    'gender',
-    'phoneNumber',
-  ];
+  const requiredFields = ['firstName', 'lastName', 'email', 'phoneNumber'];
 
   const updateRequiredFields = update ? ['userName', 'email', 'password'] : [];
 
@@ -127,7 +120,7 @@ const UpdateProfileScreen = ({navigation, route}) => {
 
       if (result.success) {
         setProfileImage(result.uri);
-         Toast.show({
+        Toast.show({
           type: 'success',
           text1: 'Success',
           text2: 'Profile photo uploaded',
@@ -151,7 +144,7 @@ const UpdateProfileScreen = ({navigation, route}) => {
           ...prev,
           profilePicUrl: 'Failed to upload profile image. Please try again.',
         }));
-         Toast.show({
+        Toast.show({
           type: 'error',
           text1: 'Error',
           text2: 'Failed to upload image. Please try again.',
@@ -164,7 +157,7 @@ const UpdateProfileScreen = ({navigation, route}) => {
         ...prev,
         profilePicUrl: 'Error uploading image. Please try again.',
       }));
-       Toast.show({
+      Toast.show({
         type: 'error',
         text1: 'Error',
         text2: 'Failed to upload image. Please try again.',
