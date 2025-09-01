@@ -409,6 +409,13 @@ const CreateAssignment = ({navigation, route}) => {
     }
 
     setAttachmentList(prev => prev.filter((_, i) => i !== index));
+
+    Toast.show({
+      type: 'info',
+      text1: 'Attachment Removed',
+      text2: item.name,
+      visibilityTime: 2000,
+    });
   };
 
   const renderAttachmentItem = (item, index) => (
