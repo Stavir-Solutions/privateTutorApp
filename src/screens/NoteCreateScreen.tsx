@@ -422,7 +422,6 @@ const NoteCreateScreen = ({navigation, route}) => {
       type: 'info',
       text1: 'Attachment Removed',
       text2: item.name,
-      position: 'bottom',
       visibilityTime: 2000,
     });
   };
