@@ -3,6 +3,7 @@ import store from './store';
 import {logout} from './authslice';
 import {useNavigation} from '@react-navigation/native';
 import {Alert} from 'react-native';
+import * as Keychain from 'react-native-keychain';
 
 type Callback<T = any> = (data: T) => void;
 
@@ -80,7 +81,8 @@ export const refreshToken = async (): Promise<RefreshTokenResponse | null> => {
       const responseJson = JSON.parse(fixedText);
 
       if (responseJson.token) {
-        await AsyncStorage.setItem('Token', responseJson.token);
+        // await AsyncStorage.setItem('Token', responseJson.token);
+           await Keychain.setGenericPassword('Token', responseJson.token);
         console.log('token setted');
 
         if (responseJson.refreshToken) {

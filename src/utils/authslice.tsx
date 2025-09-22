@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {createSlice, createAsyncThunk} from '@reduxjs/toolkit';
 import {getapi} from '../utils/api';
 import {State} from 'react-native-gesture-handler';
+import * as Keychain from 'react-native-keychain';
 interface AuthState {
   isLoggedIn: boolean;
   newBatchCreated: boolean;
@@ -15,6 +16,8 @@ interface AuthState {
   loading: boolean;
   error: string | null;
 }
+
+
 
 export const fetch_batchs = createAsyncThunk(
   'auth/fetch_batchs',
@@ -81,7 +84,8 @@ const authSlice = createSlice({
       state.Teacher_id = action.payload.Teacher_id;
       state.Teacher_name = action.payload.Teacher_name;
 
-      AsyncStorage.setItem('Token', action.payload.token);
+      // AsyncStorage.setItem('Token', action.payload.token);
+      Keychain.setGenericPassword('Token',  action.payload.token);
       if (action.payload.refreshToken) {
         AsyncStorage.setItem('RefreshToken', action.payload.refreshToken);
       }
@@ -123,7 +127,8 @@ const authSlice = createSlice({
         state.refreshToken = action.payload.refreshToken;
         AsyncStorage.setItem('RefreshToken', action.payload.refreshToken);
       }
-      AsyncStorage.setItem('Token', action.payload.token);
+      // AsyncStorage.setItem('Token', action.payload.token);
+        Keychain.setGenericPassword('Token',  action.payload.token);
     },
   },
   extraReducers: builder => {

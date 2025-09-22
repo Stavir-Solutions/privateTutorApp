@@ -19,6 +19,7 @@ import { login } from '../utils/authslice';
 import { getUserId, getUserName, Token_decode } from '../utils/TokenDecoder';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { base_url } from '../utils/store';
+import * as Keychain from 'react-native-keychain';
 
 const LoginScreen = ({ navigation }) => {
   const [username, setUsername] = useState('');
@@ -176,7 +177,8 @@ const LoginScreen = ({ navigation }) => {
       console.log('res', res);
       if (response.ok && res.token && res.refreshToken) {
         console.log('yess');
-        await AsyncStorage.setItem('Token', res.token);
+        // await AsyncStorage.setItem('Token', res.token);
+        await Keychain.setGenericPassword('Token',res.token);
         await AsyncStorage.setItem('RefreshToken', res.refreshToken);
         await AsyncStorage.setItem('TeacherId', Teacherid);
         await AsyncStorage.setItem('TeacherName', Teachername);
@@ -192,7 +194,8 @@ const LoginScreen = ({ navigation }) => {
         dispatch(login(userData));
         navigation.replace('Tabs');
       } else if (response.ok && res.token) {
-        await AsyncStorage.setItem('Token', res.token);
+        // await AsyncStorage.setItem('Token', res.token);
+           await Keychain.setGenericPassword('Token',res.token);
         await AsyncStorage.setItem('TeacherId', Teacherid);
         await AsyncStorage.setItem('TeacherName', Teachername);
 
