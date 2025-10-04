@@ -39,8 +39,9 @@ jobs:
       - name: Decode Keystore
         run: |
           mkdir -p android/app
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/release.keystore
-
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/release.keystore
+                - name: Decode Keystore
+      
       - name: Build Signed AAB
         run: |
           cd android
