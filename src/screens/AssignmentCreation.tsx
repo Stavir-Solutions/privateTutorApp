@@ -21,6 +21,7 @@ import {postApi, putapi} from '../utils/api';
 import {currentdate} from '../components/moment';
 import moment from 'moment';
 import Toast from 'react-native-toast-message';
+import * as Keychain from 'react-native-keychain';
 
 const CreateAssignment = ({navigation, route}) => {
   const isEditMode = route.params?.assignment ? true : false;
@@ -249,7 +250,8 @@ const CreateAssignment = ({navigation, route}) => {
     try {
       console.log('Uploading file...', fileData.name);
 
-      const Token = await AsyncStorage.getItem('Token');
+        const credentials = await Keychain.getGenericPassword();
+    const Token = credentials.password;
 
       const formData = new FormData();
       formData.append('file', fileData);
@@ -302,7 +304,9 @@ const CreateAssignment = ({navigation, route}) => {
 
   const Assignment_Submit = async assignmentData => {
     try {
-      const Token = await AsyncStorage.getItem('Token');
+     
+           const credentials = await Keychain.getGenericPassword();
+    const Token = credentials.password;
 
       if (!Token) {
         throw new Error('Authentication token is missing.');
@@ -357,7 +361,9 @@ const CreateAssignment = ({navigation, route}) => {
   };
 
   const Assignment_Update = async assignmentData => {
-    const Token = await AsyncStorage.getItem('Token');
+    
+         const credentials = await Keychain.getGenericPassword();
+    const Token = credentials.password;
 
     const url = `assignments/${assignmentData.id}`;
     const headers = {

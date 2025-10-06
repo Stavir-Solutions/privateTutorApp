@@ -25,6 +25,7 @@ import {useDispatch, useSelector} from 'react-redux';
 import {batch_id, selectBatch} from '../utils/authslice';
 import ShimmerPlaceholder from 'react-native-shimmer-placeholder';
 import {useFocusEffect} from '@react-navigation/core';
+import * as Keychain from 'react-native-keychain';
 
 interface StudentDetails {
   [studentId: string]: string;
@@ -58,7 +59,8 @@ const FeesScreen = ({navigation}) => {
   const Fees_fetch = async () => {
     setLoading(true);
     const Batch_id = await AsyncStorage.getItem('batch_id');
-    const Token = await AsyncStorage.getItem('Token');
+        const credentials = await Keychain.getGenericPassword();
+            const Token = credentials.password;
 
     const currentBatchId = Batch_id ? Batch_id : selectedBatch_id;
 
@@ -112,7 +114,8 @@ const FeesScreen = ({navigation}) => {
   };
 
   const student_details_fetch = async (records: any[]) => {
-    const Token = await AsyncStorage.getItem('Token');
+        const credentials = await Keychain.getGenericPassword();
+            const Token = credentials.password;
     const studentIds = [...new Set(records.map(item => item.studentId))];
 
     const studentDetailsResponse = await Promise.all(

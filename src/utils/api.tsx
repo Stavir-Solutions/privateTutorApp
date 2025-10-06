@@ -197,7 +197,8 @@ export const postApi = async (
   navigation?: any,
 ): Promise<any> => {
   try {
-    const token = await AsyncStorage.getItem('Token');
+        const credentials = await Keychain.getGenericPassword();
+            const token = credentials.password;
 
     const headers = {
       'Content-Type': 'application/json',
@@ -277,7 +278,8 @@ export const getapi = async (
   navigation?: any,
 ): Promise<any> => {
   try {
-    const token = await AsyncStorage.getItem('Token');
+        const credentials = await Keychain.getGenericPassword();
+            const token = credentials.password;
     const headers = {
       'Content-Type': 'application/json',
       ...header,
@@ -415,7 +417,8 @@ export const putapi = async (
   navigation?: any,
 ): Promise<any> => {
   try {
-    const token = await AsyncStorage.getItem('Token');
+        const credentials = await Keychain.getGenericPassword();
+            const token = credentials.password;
     const headers = {
       'Content-Type': 'application/json',
       ...header,
@@ -488,7 +491,8 @@ export const deleteapi = async (
   navigation?: any,
 ): Promise<any> => {
   try {
-    const token = await AsyncStorage.getItem('Token');
+        const credentials = await Keychain.getGenericPassword();
+            const token = credentials.password;
     const headers = {
       'Content-Type': 'application/json',
       ...header,
@@ -548,7 +552,8 @@ export const deleteapi = async (
 };
 
 export const isAuthenticated = async (): Promise<boolean> => {
-  const token = await AsyncStorage.getItem('Token');
+      const credentials = await Keychain.getGenericPassword();
+            const token = credentials.password;
   return !!token;
 };
 

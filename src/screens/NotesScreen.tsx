@@ -20,6 +20,7 @@ import {batch_id, selectBatch} from '../utils/authslice';
 import {useDispatch, useSelector} from 'react-redux';
 import ShimmerPlaceholder from 'react-native-shimmer-placeholder';
 import {useFocusEffect} from '@react-navigation/core';
+import * as Keychain from 'react-native-keychain';
 
 const NotesScreen = ({navigation}) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -44,7 +45,8 @@ const NotesScreen = ({navigation}) => {
 
   const Notes_fetch = async () => {
     setLoading(true);
-    const Token = await AsyncStorage.getItem('Token');
+        const credentials = await Keychain.getGenericPassword();
+            const Token = credentials.password;
     const Batch_id = await AsyncStorage.getItem('batch_id');
     const currentBatchId = Batch_id ? Batch_id : selectedBatch_id;
 

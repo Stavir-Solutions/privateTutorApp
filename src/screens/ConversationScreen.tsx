@@ -23,6 +23,7 @@ import { getapi, patchApi, postApi } from '../utils/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { pick } from '@react-native-documents/picker';
 import { base_url } from '../utils/store';
+import * as Keychain from 'react-native-keychain';
 
 const ConversationScreen = ({ route, navigation }) => {
   const { deeplink, conversationId } = route?.params;
@@ -116,7 +117,8 @@ const ConversationScreen = ({ route, navigation }) => {
 
   const refreshMessages = async () => {
     try {
-      const Token = await AsyncStorage.getItem('Token');
+          const credentials = await Keychain.getGenericPassword();
+            const Token = credentials.password;
       const url = `/messages/${conversationId}`;
       const headers = {
         Accept: 'application/json',
@@ -194,7 +196,8 @@ const ConversationScreen = ({ route, navigation }) => {
     setError(null);
 
     try {
-      const Token = await AsyncStorage.getItem('Token');
+          const credentials = await Keychain.getGenericPassword();
+            const Token = credentials.password;
       const url = `/messages/${id}`;
       const headers = {
         Accept: 'application/json',
@@ -344,7 +347,8 @@ const ConversationScreen = ({ route, navigation }) => {
     try {
       console.log('Uploading attachment...');
 
-      const Token = await AsyncStorage.getItem('Token');
+          const credentials = await Keychain.getGenericPassword();
+            const Token = credentials.password;
       const fileData = selectedAttachments[0];
 
       const formDataToUpload = new FormData();
@@ -398,7 +402,8 @@ const ConversationScreen = ({ route, navigation }) => {
     try {
       console.log('Uploading attachments...');
 
-      const Token = await AsyncStorage.getItem('Token');
+          const credentials = await Keychain.getGenericPassword();
+            const Token = credentials.password;
       const userId = await AsyncStorage.getItem('TeacherId');
       const uploadPromises = selectedAttachments.map(async fileData => {
         const formDataToUpload = new FormData();
@@ -483,7 +488,8 @@ const ConversationScreen = ({ route, navigation }) => {
 
       console.log(conversationId);
 
-      const Token = await AsyncStorage.getItem('Token');
+          const credentials = await Keychain.getGenericPassword();
+            const Token = credentials.password;
       const url = `messages/${conversationId}/reply`;
       const headers = {
         Accept: 'application/json',
@@ -545,7 +551,8 @@ const ConversationScreen = ({ route, navigation }) => {
     try {
       setLoading(true);
 
-      const Token = await AsyncStorage.getItem('Token');
+          const credentials = await Keychain.getGenericPassword();
+            const Token = credentials.password;
       const Tid = await AsyncStorage.getItem('TeacherId');
       if (!Token) {
         throw new Error('No token found, authentication required');
@@ -616,7 +623,8 @@ const ConversationScreen = ({ route, navigation }) => {
         flatListRef.current?.scrollToEnd({ animated: true });
       }, 100);
 
-      const Token = await AsyncStorage.getItem('Token');
+          const credentials = await Keychain.getGenericPassword();
+            const Token = credentials.password;
       const url = `messages`;
       const headers = {
         Accept: 'application/json',

@@ -18,6 +18,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import * as Keychain from 'react-native-keychain';
 
 const StudentListing = ({navigation}) => {
   const [students, setStudents] = useState([]);
@@ -30,7 +31,8 @@ const StudentListing = ({navigation}) => {
 
   const students_fetch = async () => {
     setLoading(true);
-    const Token = await AsyncStorage.getItem('Token');
+        const credentials = await Keychain.getGenericPassword();
+            const Token = credentials.password;
     const Batch_id = await AsyncStorage.getItem('batch_id');
     const url = `students/batch/${Batch_id ? Batch_id : selectedBatch_id}`;
     const headers = {

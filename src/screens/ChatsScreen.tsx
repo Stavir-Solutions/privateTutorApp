@@ -21,6 +21,7 @@ import ShimmerPlaceholder from 'react-native-shimmer-placeholder';
 import BatchSelectorSheet from '../components/BatchSelectorSheet';
 import {batch_id, selectBatch} from '../utils/authslice';
 import {useFocusEffect} from '@react-navigation/core';
+import * as Keychain from 'react-native-keychain';
 
 const ChatsScreen = ({navigation}) => {
   const [loading, setLoading] = useState(true);
@@ -48,7 +49,9 @@ const ChatsScreen = ({navigation}) => {
 
   const fetchConversations = async () => {
     setLoading(true);
-    const Token = await AsyncStorage.getItem('Token');
+  
+        const credentials = await Keychain.getGenericPassword();
+            const Token = credentials.password;
     const Batch_id = await AsyncStorage.getItem('batch_id');
 
     const currentBatchId = Batch_id ? Batch_id : selectedBatch_id;

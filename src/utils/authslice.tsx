@@ -23,7 +23,8 @@ export const fetch_batchs = createAsyncThunk(
   'auth/fetch_batchs',
   async (_, {rejectWithValue}) => {
     try {
-      const Token = await AsyncStorage.getItem('Token');
+          const credentials = await Keychain.getGenericPassword();
+            const Token = credentials.password;
       const Teacher_id = await AsyncStorage.getItem('TeacherId');
 
       if (!Token || !Teacher_id) {

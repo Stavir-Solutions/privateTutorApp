@@ -76,7 +76,9 @@ export const uploadFile = async (formData, uploadType) => {
     formData.append('userId', userId);
     formData.append('uploadType', uploadType);
 
-    const token = await AsyncStorage.getItem('Token');
+  
+    const credentials = await Keychain.getGenericPassword();
+    const token = credentials.password;
     if (!token) {
       return {
         success: false,

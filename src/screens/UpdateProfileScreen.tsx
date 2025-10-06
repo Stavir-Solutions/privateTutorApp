@@ -17,6 +17,7 @@ import {putapi} from '../utils/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {pickAndUploadImage} from '../components/FileUploadService';
 import Toast from 'react-native-toast-message';
+import * as Keychain from 'react-native-keychain';
 
 const UpdateProfileScreen = ({navigation, route}) => {
   const isEditMode = route.params?.update ? true : false;
@@ -294,7 +295,8 @@ const UpdateProfileScreen = ({navigation, route}) => {
 
       setIsLoading(true);
 
-      const Token = await AsyncStorage.getItem('Token');
+          const credentials = await Keychain.getGenericPassword();
+            const Token = credentials.password;
       const url = `teachers/${userId}`;
 
       const headers = {

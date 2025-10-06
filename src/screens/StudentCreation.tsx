@@ -20,6 +20,7 @@ import {pickAndUploadImage} from '../components/FileUploadService';
 import Feather from 'react-native-vector-icons/Feather';
 import Toast from 'react-native-toast-message';
 import {base_url} from '../utils/store';
+import * as Keychain from 'react-native-keychain';
 
 const StudentCreation = ({navigation, route}) => {
   const isEditMode = route.params?.student ? true : false;
@@ -81,7 +82,8 @@ const StudentCreation = ({navigation, route}) => {
     setUsernameChecked(false);
 
     try {
-      const Token = await AsyncStorage.getItem('Token');
+          const credentials = await Keychain.getGenericPassword();
+            const Token = credentials.password;
       const url = `${base_url}/students/userName/${username}`;
 
       const response = await fetch(url, {
@@ -487,7 +489,8 @@ const StudentCreation = ({navigation, route}) => {
         ),
       );
 
-      const Token = await AsyncStorage.getItem('Token');
+          const credentials = await Keychain.getGenericPassword();
+            const Token = credentials.password;
 
       const url = `students/${student.id}`;
       const headers = {
@@ -562,7 +565,8 @@ const StudentCreation = ({navigation, route}) => {
         ),
       );
 
-      const Token = await AsyncStorage.getItem('Token');
+          const credentials = await Keychain.getGenericPassword();
+            const Token = credentials.password;
 
       const url = 'students';
       const headers = {
@@ -614,7 +618,8 @@ const StudentCreation = ({navigation, route}) => {
 
   const addToBatch = async student => {
     try {
-      const Token = await AsyncStorage.getItem('Token');
+          const credentials = await Keychain.getGenericPassword();
+            const Token = credentials.password;
       const Batch_id = await AsyncStorage.getItem('batch_id');
 
       const url = `/batches/${Batch_id}/student/${student}`;

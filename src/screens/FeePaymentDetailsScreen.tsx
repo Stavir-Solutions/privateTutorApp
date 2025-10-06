@@ -18,6 +18,7 @@ import {deleteapi, getapi, patchApi, postapi, putapi} from '../utils/api';
 import dateconvert from '../components/moment';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
+import * as Keychain from 'react-native-keychain';
 
 const FeePaymentDetailsScreen = ({route, navigation}) => {
   const {feeRecord, name} = route.params;
@@ -89,7 +90,8 @@ const FeePaymentDetailsScreen = ({route, navigation}) => {
     //   setLoading(false);
     // }, 10000);
 
-    const Token = await AsyncStorage.getItem('Token');
+        const credentials = await Keychain.getGenericPassword();
+            const Token = credentials.password;
     const url = `fee-records/${id}`;
     const headers = {
       Accept: 'application/json',
@@ -113,7 +115,8 @@ const FeePaymentDetailsScreen = ({route, navigation}) => {
 
   const Fees_update = async () => {
     try {
-      const Token = await AsyncStorage.getItem('Token');
+          const credentials = await Keychain.getGenericPassword();
+            const Token = credentials.password;
       if (!Token) {
         throw new Error('No token found, authentication required');
       }

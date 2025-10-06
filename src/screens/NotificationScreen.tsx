@@ -16,6 +16,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import {notificationz} from '../dumyDb';
 import {getapi, patchApi} from '../utils/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Keychain from 'react-native-keychain';
 
 const NotificationScreen = ({navigation}) => {
   const [notifications, setNotifications] = useState();
@@ -94,7 +95,8 @@ const NotificationScreen = ({navigation}) => {
 
   const Notification_marking = async (notification_id: any) => {
     try {
-      const Token = await AsyncStorage.getItem('Token');
+          const credentials = await Keychain.getGenericPassword();
+            const Token = credentials.password;
 
       const url = `/notifications/${notification_id}/seen`;
       const headers = {
@@ -130,7 +132,8 @@ const NotificationScreen = ({navigation}) => {
   };
 
   const Notification_fetch = async () => {
-    const Token = await AsyncStorage.getItem('Token');
+        const credentials = await Keychain.getGenericPassword();
+            const Token = credentials.password;
     const Teacher_id = await AsyncStorage.getItem('TeacherId');
 
     const url = `notifications/teachers/${Teacher_id}`;

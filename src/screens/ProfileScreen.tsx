@@ -20,6 +20,7 @@ import {getapi, deleteapi} from '../utils/api';
 import {getUserId} from '../utils/TokenDecoder';
 import LinearGradient from 'react-native-linear-gradient';
 import Toast from 'react-native-toast-message';
+import * as Keychain from 'react-native-keychain';
 
 const ConfirmationDialog = ({
   visible,
@@ -149,7 +150,8 @@ const ProfileScreen = ({navigation, item}) => {
     try {
       setLoading(true);
 
-      const Token = await AsyncStorage.getItem('Token');
+          const credentials = await Keychain.getGenericPassword();
+            const Token = credentials.password;
       if (!Token) {
         throw new Error('No token found, authentication required');
       }
@@ -222,7 +224,8 @@ const ProfileScreen = ({navigation, item}) => {
 
   const confirmDeleteBatch = async () => {
     try {
-      const Token = await AsyncStorage.getItem('Token');
+          const credentials = await Keychain.getGenericPassword();
+            const Token = credentials.password;
       const url = `batches/${deletingBatch.id}`;
       const headers = {
         Accept: 'application/json',

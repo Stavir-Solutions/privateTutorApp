@@ -21,6 +21,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {postApi, putapi} from '../utils/api';
 import moment from 'moment';
 import Toast from 'react-native-toast-message';
+import * as Keychain from 'react-native-keychain';
 
 const NoteCreateScreen = ({navigation, route}) => {
   const isEditMode = route.params?.note ? true : false;
@@ -272,7 +273,8 @@ const NoteCreateScreen = ({navigation, route}) => {
     try {
       console.log('Uploading file...', fileData.name);
 
-      const Token = await AsyncStorage.getItem('Token');
+          const credentials = await Keychain.getGenericPassword();
+            const Token = credentials.password;
 
       const formData = new FormData();
       formData.append('file', fileData);
@@ -322,7 +324,8 @@ const NoteCreateScreen = ({navigation, route}) => {
   };
 
   const Note_Submit = async noteData => {
-    const Token = await AsyncStorage.getItem('Token');
+        const credentials = await Keychain.getGenericPassword();
+            const Token = credentials.password;
     const url = `notes`;
     const headers = {
       Accept: 'application/json',
@@ -365,7 +368,8 @@ const NoteCreateScreen = ({navigation, route}) => {
   };
 
   const Note_Update = async noteData => {
-    const Token = await AsyncStorage.getItem('Token');
+        const credentials = await Keychain.getGenericPassword();
+            const Token = credentials.password;
     const url = `notes/${noteData.id}`;
     const headers = {
       Accept: 'application/json',

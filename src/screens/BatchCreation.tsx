@@ -22,6 +22,7 @@ import {postApi, putapi} from '../utils/api';
 import {useRoute} from '@react-navigation/core';
 import {useDispatch} from 'react-redux';
 import {fetch_batchs, setBatchCreated} from '../utils/authslice';
+import * as Keychain from 'react-native-keychain';
 
 const BatchCreation = ({navigation, route}) => {
   const isEditMode = route.params?.update ? true : false;
@@ -90,7 +91,9 @@ const BatchCreation = ({navigation, route}) => {
 
   const Batch_Creation = async () => {
     try {
-      const Token = await AsyncStorage.getItem('Token');
+      
+      const credentials = await Keychain.getGenericPassword();
+        const Token = credentials.password;
       if (!Token) {
         throw new Error('No token found, authentication required');
       }
@@ -166,7 +169,9 @@ const BatchCreation = ({navigation, route}) => {
 
   const Batch_update = async () => {
     try {
-      const Token = await AsyncStorage.getItem('Token');
+    
+          const credentials = await Keychain.getGenericPassword();
+        const Token = credentials.password;
       if (!Token) {
         throw new Error('No token found, authentication required');
       }
