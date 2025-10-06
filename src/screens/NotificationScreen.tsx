@@ -43,7 +43,7 @@ const NotificationScreen = ({navigation}) => {
     const updatedNotifications = notifications.map(item =>
       item.id === notification.id ? {...item, seen: true} : item,
     );
-    console.log(notification);
+   
     Notification_marking(notification.id);
     setNotifications(updatedNotifications);
 
@@ -108,8 +108,7 @@ const NotificationScreen = ({navigation}) => {
       const onResponse = res => {
         setShowSuccessMessage(true);
         animateSuccess;
-        console.log(res);
-        console.log('notification marked');
+     
         setTimeout(() => {
           setShowSuccessMessage(false);
         }, 2000);
@@ -143,15 +142,12 @@ const NotificationScreen = ({navigation}) => {
       Authorization: `Bearer ${Token}`,
     };
     const onResponse = res => {
-      console.log('hiii');
-      console.log(Teacher_id);
-      console.log('res', res);
+   
       setNotifications(res);
     };
 
     const onCatch = res => {
-      console.log('Error');
-      console.log(res);
+  
     };
     getapi(url, headers, onResponse, onCatch, navigation);
   };

@@ -51,7 +51,7 @@ const NotesScreen = ({navigation}) => {
     const currentBatchId = Batch_id ? Batch_id : selectedBatch_id;
 
     if (!currentBatchId) {
-      console.log('No batch selected yet');
+   
       setLoading(false);
       setIsBatchSelected(false);
       setNotes([]);
@@ -66,16 +66,14 @@ const NotesScreen = ({navigation}) => {
       Authorization: `Bearer ${Token}`,
     };
     const onResponse = res => {
-      console.log('hiii');
-      console.log(res);
+     
       setNotes(res || []);
       setLoading(false);
       setRefreshing(false);
     };
 
     const onCatch = res => {
-      console.log('Error');
-      console.log(res);
+     
       setLoading(false);
       setRefreshing(false);
     };
@@ -84,16 +82,15 @@ const NotesScreen = ({navigation}) => {
 
   useEffect(() => {
     Notes_fetch();
-    console.log(notes);
-    console.log('notes fetch');
+
   }, [selectedBatchString]);
 
   useFocusEffect(
     useCallback(() => {
-      console.log('Screen is focused');
+    
       Notes_fetch();
       return () => {
-        console.log('Screen is unfocused');
+      
       };
     }, []),
   );

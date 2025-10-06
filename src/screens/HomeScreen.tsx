@@ -57,7 +57,7 @@ const HomeScreen = ({navigation}) => {
     const currentBatchId = Batch_id ? Batch_id : selectedBatch_id;
 
     if (!currentBatchId) {
-      console.log('No batch selected yet');
+  
       setLoading(false);
       setIsBatchSelected(false);
       setStudents([]);
@@ -186,12 +186,12 @@ const HomeScreen = ({navigation}) => {
 
   useFocusEffect(
     useCallback(() => {
-      console.log('Screen is focused');
+    
       students_fetch();
       TeacherDetails();
       dispatch(fetch_batchs());
       return () => {
-        console.log('Screen is unfocused');
+       
       };
     }, []),
   );

@@ -99,7 +99,7 @@ const FeePaymentDetailsScreen = ({route, navigation}) => {
       Authorization: `Bearer ${Token}`,
     };
     const onResponse = async res => {
-      console.log('deleted successfully');
+    
       await new Promise(resolve => setTimeout(resolve, 1000));
       navigation.goBack();
 
@@ -165,7 +165,7 @@ const FeePaymentDetailsScreen = ({route, navigation}) => {
       };
 
       await patchApi(url, headers, body, onResponse, onCatch, navigation);
-      console.log(body);
+      
     } catch (error) {
       console.error('Fees marking Error:', error.message);
       Alert.alert('Error', error.message);

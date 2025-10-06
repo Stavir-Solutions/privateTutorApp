@@ -116,7 +116,7 @@ const StudentCreation = ({navigation, route}) => {
         setUsernameAvailable(true);
         return true;
       } else {
-        console.log('Unexpected status code:', response.status);
+       
         Toast.show({
           type: 'error',
           text1: 'Username Error',
@@ -500,7 +500,7 @@ const StudentCreation = ({navigation, route}) => {
       };
 
       const onResponse = res => {
-        console.log('Student updated successfully:', res);
+     
         Toast.show({
           type: 'success',
           text1: 'Student',
@@ -511,7 +511,7 @@ const StudentCreation = ({navigation, route}) => {
 
       const onCatch = err => {
         setJsonError(err?.error || 'Something went wrong');
-        console.log('Error updating Student:', err?.error);
+     
         Toast.show({
           type: 'error',
           text1: 'Error',
@@ -578,15 +578,14 @@ const StudentCreation = ({navigation, route}) => {
       const onResponse = res => {
         addToBatch(res.id);
         if (res.ok) {
-          console.log('Student created successfully:', res);
+      
         }
         navigation.goBack();
       };
 
       const onCatch = err => {
         setJsonError(err?.error || 'Something went wrong');
-        console.log(Token);
-        console.log('Error creating profile:', err?.error);
+     
         Toast.show({
           type: 'error',
           text1: 'Error',
@@ -630,7 +629,7 @@ const StudentCreation = ({navigation, route}) => {
       };
 
       const onResponse = res => {
-        console.log('Student added successfully:', res);
+      
         Toast.show({
           type: 'success',
           text1: 'New Student',

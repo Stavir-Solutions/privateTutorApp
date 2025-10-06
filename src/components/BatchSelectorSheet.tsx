@@ -71,7 +71,7 @@ const BatchSelectorSheet = React.forwardRef(
     const [selectedBatch, setSelectedBatch] = useState(null);
 
     const refreshBatches = useCallback(() => {
-      console.log('enetring from home screen');
+   
       return dispatch(fetch_batchs())
         .then(response => {
           if (response.payload && response.payload.length > 0) {

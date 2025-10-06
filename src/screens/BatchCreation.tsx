@@ -121,7 +121,7 @@ const BatchCreation = ({navigation, route}) => {
         ),
       );
 
-      console.log(fliteredData);
+     
 
       const onResponse = async res => {
         Toast.show({
@@ -220,7 +220,7 @@ const BatchCreation = ({navigation, route}) => {
         onCatch,
         navigation,
       );
-      console.log(filteredBatch);
+    
     } catch (error) {
       console.error('Batch_Updation Error:', error.message);
       Toast.show({

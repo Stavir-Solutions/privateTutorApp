@@ -34,8 +34,8 @@ const Rootnavigator = () => {
   const Stack = createNativeStackNavigator();
   const isLoggedIn = useSelector(state => state.auth.isLoggedIn);
   // const Token = useSelector((state) => state.auth.token);
-  // console.log(isLoggedIn);
-  // console.log(Token)
+ 
+
 
   return (
     <Stack.Navigator

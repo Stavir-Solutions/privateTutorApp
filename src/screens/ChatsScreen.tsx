@@ -57,7 +57,7 @@ const ChatsScreen = ({navigation}) => {
     const currentBatchId = Batch_id ? Batch_id : selectedBatch_id;
 
     if (!currentBatchId) {
-      console.log('No batch selected yet');
+   
       setLoading(false);
       setIsBatchSelected(false);
       setConversations([]);
@@ -75,15 +75,14 @@ const ChatsScreen = ({navigation}) => {
       Authorization: `Bearer ${Token}`,
     };
     const onResponse = res => {
-      console.log('teacher: ', Teacher_id);
-      console.log('batch: ', Batch_id);
+    
       setConversations(res);
       setLoading(false);
       setRefreshing(false);
     };
 
     const onCatch = err => {
-      console.log('Error fetching conversations:', err);
+   
       setLoading(false);
       setRefreshing(false);
     };
@@ -97,10 +96,10 @@ const ChatsScreen = ({navigation}) => {
 
   useFocusEffect(
     useCallback(() => {
-      console.log('Screen is focused');
+   
       fetchConversations();
       return () => {
-        console.log('Screen is unfocused');
+    
       };
     }, []),
   );

@@ -140,7 +140,7 @@ const UpdateProfileScreen = ({navigation, route}) => {
           }));
         }
       } else {
-        console.log('Image upload failed:', result.message);
+      
         setErrors(prev => ({
           ...prev,
           profilePicUrl: 'Failed to upload profile image. Please try again.',
@@ -333,7 +333,7 @@ const UpdateProfileScreen = ({navigation, route}) => {
 
       const onResponse = res => {
         setIsLoading(false);
-        console.log('Profile updated successfully');
+    
         Toast.show({
           type: 'success',
           text1: 'Profile Update',
@@ -367,7 +367,7 @@ const UpdateProfileScreen = ({navigation, route}) => {
           });
         }
 
-        console.log('Error updating profile:', err);
+       
       };
 
       putapi(url, headers, payload, onResponse, onCatch, navigation);

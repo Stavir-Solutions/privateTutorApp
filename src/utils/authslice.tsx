@@ -44,7 +44,7 @@ export const fetch_batchs = createAsyncThunk(
           url,
           headers,
           async res => {
-            console.log('Fetched batches:', res);
+         
             resolve(res || []);
           },
           error => {

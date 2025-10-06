@@ -65,7 +65,7 @@ const FeesScreen = ({navigation}) => {
     const currentBatchId = Batch_id ? Batch_id : selectedBatch_id;
 
     if (!currentBatchId) {
-      console.log('No batch selected yet');
+   
       setLoading(false);
       setIsBatchSelected(false);
       setFees([]);
@@ -105,8 +105,7 @@ const FeesScreen = ({navigation}) => {
     };
 
     const onCatch = res => {
-      console.log('Error');
-      console.log(res);
+   
       setLoading(false);
       setRefreshing(false);
     };
@@ -172,10 +171,10 @@ const FeesScreen = ({navigation}) => {
 
   useFocusEffect(
     useCallback(() => {
-      console.log('Screen is focused');
+    
       Fees_fetch();
       return () => {
-        console.log('Screen is unfocused');
+     
       };
     }, []),
   );
@@ -211,7 +210,7 @@ const FeesScreen = ({navigation}) => {
 
   // const filteredFees = useMemo(() => {
   //   return fees.filter(record => {
-  //     console.log(dateconvert(record.dueDate));
+ 
   //     const studentName = studentDetails[record.studentId] || '';
   //     const matchesSearch =
   //       searchQuery === '' ||

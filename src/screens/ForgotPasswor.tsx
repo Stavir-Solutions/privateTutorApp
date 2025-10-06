@@ -55,9 +55,9 @@ const ForgotPassword = ({navigation}) => {
 
       const contentType = response.headers.get('Content-Type');
       const rawText = await response.text();
-      console.log('Raw response:', rawText);
+     
 
-      console.log(url);
+     
 
       // if (!response.ok) {
       //   // throw new Error(`HTTP error! Status: ${response.status}`);

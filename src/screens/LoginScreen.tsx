@@ -76,7 +76,7 @@ const LoginScreen = ({ navigation }) => {
   //     setLoading(false);
   //     const Teacherid = await getUserId(res.token);
   //     const Teachername = await getUserName(res.token);
-  //     console.log("errorsss")
+  
 
   //     if (res.token && res.refreshToken) {
 
@@ -91,7 +91,7 @@ const LoginScreen = ({ navigation }) => {
   //         Teacher_id: Teacherid,
   //         Teacher_name:Teachername
   //       };
-  //       console.log('userData', userData);
+
 
   //       dispatch(login(userData));
   //       navigation.replace('Tabs');
@@ -106,7 +106,7 @@ const LoginScreen = ({ navigation }) => {
   //         Teacher_id: Teacherid,
   //         Teacher_name:Teachername
   //       };
-  //       console.log('userData', userData);
+
 
   //       dispatch(login(userData));
   //       navigation.replace('Tabs');
@@ -119,8 +119,7 @@ const LoginScreen = ({ navigation }) => {
 
   //   const onCatch = (error) => {
   //     setLoading(false);
-  //     console.log("error und")
-  //     console.log('Error:', error);
+
   //     if (error.response?.status === 401) {
   //       setErrors({ ...errors, general: 'Invalid username or password' });
   //     } else {
@@ -128,7 +127,7 @@ const LoginScreen = ({ navigation }) => {
   //         ...errors,
   //         general: 'An error occurred. Please try again later',
   //       });
-  //       console.log('Error:', error);
+
   //     }
   //   };
 
@@ -144,7 +143,7 @@ const LoginScreen = ({ navigation }) => {
   // };
 
   const Teacher_Login = async () => {
-    console.log('nhj');
+  
     if (!validateForm()) {
       return;
     }
@@ -174,9 +173,9 @@ const LoginScreen = ({ navigation }) => {
 
       const Teacherid = await getUserId(res.token);
       const Teachername = await getUserName(res.token);
-      console.log('res', res);
+    
       if (response.ok && res.token && res.refreshToken) {
-        console.log('yess');
+       
         // await AsyncStorage.setItem('Token', res.token);
         await Keychain.setGenericPassword('Token',res.token);
         await AsyncStorage.setItem('RefreshToken', res.refreshToken);
@@ -189,7 +188,7 @@ const LoginScreen = ({ navigation }) => {
           Teacher_id: Teacherid,
           Teacher_name: Teachername,
         };
-        console.log('userData', userData);
+      
 
         dispatch(login(userData));
         navigation.replace('Tabs');
@@ -204,7 +203,7 @@ const LoginScreen = ({ navigation }) => {
           Teacher_id: Teacherid,
           Teacher_name: Teachername,
         };
-        console.log('userData', userData);
+    
 
         dispatch(login(userData));
         navigation.replace('Tabs');
@@ -215,7 +214,7 @@ const LoginScreen = ({ navigation }) => {
       }
     } catch (error) {
       setLoading(false);
-      console.log('Fetch Error:', error);
+   
 
       if (error.response?.status === 401) {
         setErrors({ ...errors, general: 'Invalid username or password' });

@@ -271,7 +271,7 @@ const NoteCreateScreen = ({navigation, route}) => {
 
   const uploadSingleFile = async fileData => {
     try {
-      console.log('Uploading file...', fileData.name);
+  
 
           const credentials = await Keychain.getGenericPassword();
             const Token = credentials.password;
@@ -296,10 +296,10 @@ const NoteCreateScreen = ({navigation, route}) => {
         body: formData,
       });
 
-      console.log('Status Code:', response.status);
+   
 
       const textResponse = await response.text();
-      console.log('Raw Response:', textResponse);
+   
 
       let responseData;
       try {
@@ -315,7 +315,7 @@ const NoteCreateScreen = ({navigation, route}) => {
         );
       }
 
-      console.log('Upload Successful!', responseData.url);
+   
       return responseData.url;
     } catch (error) {
       console.error('Error during file upload:', error.message);
@@ -361,7 +361,7 @@ const NoteCreateScreen = ({navigation, route}) => {
         position: 'top',
         visibilityTime: 3000,
       });
-      console.log('Error', res);
+ 
     };
 
     postApi(url, headers, filteredData, onResponse, onCatch, navigation);
@@ -405,7 +405,7 @@ const NoteCreateScreen = ({navigation, route}) => {
         position: 'top',
         visibilityTime: 3000,
       });
-      console.log('Error', res);
+    
     };
 
     putapi(url, headers, payload, onResponse, onCatch, navigation);

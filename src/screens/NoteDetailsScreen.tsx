@@ -27,7 +27,7 @@ const NoteDetailsScreen = ({route, navigation}) => {
     try {
       Linking.openURL(url);
       // const supported = await Linking.canOpenURL(url);
-      // console.log(supported);
+    
       // if (supported) {
       //   setDownloading(true);
 
@@ -37,7 +37,7 @@ const NoteDetailsScreen = ({route, navigation}) => {
       //   }, 1500);
       // } else {
       //   Alert.alert('Error', `Cannot open URL: ${url}`);
-      //   console.log('Error', `Cannot open URL: ${url}`);
+     
       // }
     } catch (error) {
       console.error('An error occurred', error);

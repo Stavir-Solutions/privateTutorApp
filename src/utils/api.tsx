@@ -32,7 +32,7 @@ export const handleLogout = async (navigation: any): Promise<void> => {
 
     store.dispatch(logout());
 
-    console.log('User logged out due to expired refresh token');
+  
 
     if (navigation) {
       navigation.reset({
@@ -46,7 +46,7 @@ export const handleLogout = async (navigation: any): Promise<void> => {
 };
 
 export const refreshToken = async (): Promise<RefreshTokenResponse | null> => {
-  console.log('entered the refreshtoken function');
+
   try {
     const refreshToken = await AsyncStorage.getItem('RefreshToken');
 
@@ -83,7 +83,7 @@ export const refreshToken = async (): Promise<RefreshTokenResponse | null> => {
       if (responseJson.token) {
         // await AsyncStorage.setItem('Token', responseJson.token);
            await Keychain.setGenericPassword('Token', responseJson.token);
-        console.log('token setted');
+     
 
         if (responseJson.refreshToken) {
           await AsyncStorage.setItem('RefreshToken', responseJson.refreshToken);
@@ -209,7 +209,7 @@ export const postApi = async (
       headers.Authorization = `Bearer ${token}`;
     }
 
-    console.log('POST Request Body:', body);
+   
 
     const response = await fetch(base_url + url, {
       method: 'POST',
@@ -231,7 +231,7 @@ export const postApi = async (
     }
 
     const text = await response.text();
-    console.log('Raw Response:', text);
+
 
     let responseJson: any;
     try {
@@ -289,7 +289,7 @@ export const getapi = async (
       headers.Authorization = `Bearer ${token}`;
     }
 
-    console.log('Headers:', headers);
+ 
 
     const response = await fetch(base_url + url, {
       method: 'GET',
@@ -314,7 +314,7 @@ export const getapi = async (
     }
 
     const responseJson = await response.json();
-    console.log('Response:', responseJson);
+ 
 
     if (onResponse) {
       onResponse(responseJson);
@@ -345,7 +345,7 @@ export const patchApi = async (
     ...header,
   };
 
-  console.log('Request Body:', body);
+ 
 
   try {
     const response = await fetch(base_url + url, {
@@ -355,7 +355,7 @@ export const patchApi = async (
     });
 
     const text = await response.text();
-    console.log('Raw Response:', text);
+
 
     if (response.status === 401) {
       await handleTokenRefresh(
@@ -389,7 +389,7 @@ export const patchApi = async (
       );
 
       const responseJson = JSON.parse(fixedText);
-      console.log('Parsed JSON:', responseJson);
+    
 
       onResponse && onResponse(responseJson);
       return responseJson;
@@ -428,7 +428,7 @@ export const putapi = async (
       headers.Authorization = `Bearer ${token}`;
     }
 
-    console.log('PUT Request Body:', body);
+ 
 
     const response = await fetch(base_url + url, {
       method: 'PUT',
@@ -450,7 +450,7 @@ export const putapi = async (
     }
 
     const text = await response.text();
-    console.log('Raw Response:', text);
+  
 
     let responseJson: any;
 
@@ -478,7 +478,7 @@ export const putapi = async (
       typeof error === 'string'
         ? error
         : error?.message || 'Something went wrong';
-    console.log('error', error.message);
+  
     onCatch && onCatch({error: errorMessage});
   }
 };
@@ -521,7 +521,7 @@ export const deleteapi = async (
         }
 
         const text = await response.text();
-        console.log('Raw Response:', text);
+    
 
         try {
           const fixedText = text.replace(
@@ -537,7 +537,7 @@ export const deleteapi = async (
       })
       .then(responseJson => {
         if (responseJson) {
-          console.log('Parsed JSON:', responseJson);
+      
           onResponse && onResponse(responseJson);
         }
       })

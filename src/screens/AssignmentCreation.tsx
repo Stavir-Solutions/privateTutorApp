@@ -50,10 +50,7 @@ const CreateAssignment = ({navigation, route}) => {
   const [removedAttachments, setRemovedAttachments] = useState([]);
 
   useEffect(() => {
-    console.log(
-      'useEffect triggered:',
-      route?.params?.assignment?.attachmentUrls,
-    );
+   
     const date = route?.params?.assignment?.submissionDate;
 
     if (date instanceof Date || typeof date === 'string') {
@@ -103,9 +100,9 @@ const CreateAssignment = ({navigation, route}) => {
   };
 
   const attachmentValidation = size => {
-    console.log(size);
+    
     const newErrors = {};
-    console.log(size > 2 * 1024 * 1024);
+   
     if (size > 2 * 1024 * 1024) {
       newErrors.attachment = 'File size must be less than 2MB';
       setErrors(newErrors);
@@ -199,7 +196,7 @@ const CreateAssignment = ({navigation, route}) => {
       });
 
       if (result && result.length > 0) {
-        console.log('Documents selected:', result);
+     
 
         const newFiles = result
           .map(file => ({
@@ -248,7 +245,7 @@ const CreateAssignment = ({navigation, route}) => {
 
   const uploadSingleFile = async fileData => {
     try {
-      console.log('Uploading file...', fileData.name);
+     
 
         const credentials = await Keychain.getGenericPassword();
     const Token = credentials.password;
@@ -273,12 +270,10 @@ const CreateAssignment = ({navigation, route}) => {
         body: formData,
       });
 
-      console.log('formdata:  ', formData);
-
-      console.log('Status Code:', response.status);
+    
 
       const textResponse = await response.text();
-      console.log('Raw Response:', textResponse);
+    
 
       let responseData;
       try {
@@ -294,7 +289,7 @@ const CreateAssignment = ({navigation, route}) => {
         );
       }
 
-      console.log('Upload Successful!', responseData.url);
+     
       return responseData.url;
     } catch (error) {
       console.error('Error during file upload:', error.message);
@@ -332,7 +327,7 @@ const CreateAssignment = ({navigation, route}) => {
         ),
       );
 
-      console.log('body', fliteredData);
+   
 
       const onResponse = res => {
         setAssignment(res);
@@ -354,7 +349,7 @@ const CreateAssignment = ({navigation, route}) => {
       };
 
       postApi(url, headers, fliteredData, onResponse, onCatch, navigation);
-      console.log('Assignment Submitted:', body);
+   
     } catch (error) {
       console.error('Error during assignment submission:', error);
     }
@@ -392,17 +387,17 @@ const CreateAssignment = ({navigation, route}) => {
     };
 
     const onCatch = res => {
-      console.log('Error');
+   
       Toast.show({
         type: 'error',
         text1: 'Failed',
         text2: 'Assigment update failed',
       });
-      console.log(res);
+   
     };
 
     putapi(url, headers, payload, onResponse, onCatch, navigation);
-    console.log(payload);
+   
   };
 
   const handleRemoveAttachment = (index, item) => {
@@ -569,9 +564,7 @@ const CreateAssignment = ({navigation, route}) => {
                   submissionDate: finalDateUtc,
                 }));
                 setSubmitdate(selectedDate);
-                console.log(selectedDate.toLocaleDateString());
-                console.log('ash', finalDateUtc);
-                console.log(...assignment);
+            
               }
             }}
           />

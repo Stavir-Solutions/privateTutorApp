@@ -58,7 +58,7 @@ const AssignmentsScreen = ({navigation}) => {
     const currentBatchId = Batch_id ? Batch_id : selectedBatch_id;
 
     if (!currentBatchId) {
-      console.log('No batch selected yet');
+    
       setLoading(false);
       setIsBatchSelected(false);
       setAssignment([]);
@@ -80,8 +80,7 @@ const AssignmentsScreen = ({navigation}) => {
     };
 
     const onCatch = res => {
-      console.log('Error');
-      console.log(res);
+    
       setLoading(false);
       setRefreshing(false);
     };
@@ -101,10 +100,10 @@ const AssignmentsScreen = ({navigation}) => {
 
   useFocusEffect(
     useCallback(() => {
-      console.log('Screen is focused');
+      
       Assignment_fetch();
       return () => {
-        console.log('Screen is unfocused');
+      
       };
     }, []),
   );

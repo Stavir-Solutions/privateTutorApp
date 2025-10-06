@@ -92,7 +92,7 @@ const SignupScreen = ({navigation}) => {
         return true;
       } else {
         const rawText = await res.text();
-        console.log('Raw response:', rawText);
+      
         setErrors(prev => ({
           ...prev,
           username: 'Could not verify username availability',
@@ -217,7 +217,7 @@ const SignupScreen = ({navigation}) => {
 
     const onResponse = async res => {
       try {
-        console.log('Account created successfully');
+      
         Toast.show({
           type: 'success',
           text1: 'Success',
@@ -249,7 +249,7 @@ const SignupScreen = ({navigation}) => {
     };
 
     const onCatch = err => {
-      console.log('Error during signup:', err);
+  
       setIsLoading(false);
 
       let errorMessage = 'Something went wrong. Please try again.';

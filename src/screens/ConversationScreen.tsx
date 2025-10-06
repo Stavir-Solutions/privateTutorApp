@@ -82,7 +82,7 @@ const ConversationScreen = ({ route, navigation }) => {
   useEffect(() => {
     loadUserData();
     if (conversationId) {
-      console.log('Loading conversation with ID:', conversationId);
+   
       getMessageById(conversationId);
     } else {
       setError('No conversation data provided');
@@ -163,7 +163,7 @@ const ConversationScreen = ({ route, navigation }) => {
           );
 
           if (hasNewMessages) {
-            console.log('New messages received!');
+        
             setMessages(allMessages);
 
             setTimeout(() => {
@@ -310,7 +310,7 @@ const ConversationScreen = ({ route, navigation }) => {
       });
 
       if (result && result.length > 0) {
-        console.log('Documents selected:', result);
+    
 
         const fileDataArray = result.map(selectedFile => ({
           uri:
@@ -330,7 +330,7 @@ const ConversationScreen = ({ route, navigation }) => {
         setFormData({});
       }
     } catch (err) {
-      console.log('User cancelled document picker or error:', err);
+    
       if (err.code !== 'DOCUMENT_PICKER_CANCELED') {
         console.error('Error picking document:', err);
         Alert.alert('Error', 'Failed to select attachment');
@@ -340,12 +340,12 @@ const ConversationScreen = ({ route, navigation }) => {
 
   const uploadAttachment = async () => {
     if (!formData || selectedAttachments.length === 0) {
-      console.log('No attachment to upload');
+    
       return null;
     }
 
     try {
-      console.log('Uploading attachment...');
+   
 
           const credentials = await Keychain.getGenericPassword();
             const Token = credentials.password;
@@ -365,10 +365,10 @@ const ConversationScreen = ({ route, navigation }) => {
         body: formDataToUpload,
       });
 
-      console.log('Upload status code:', response.status);
+     
 
       const textResponse = await response.text();
-      console.log('Raw response:', textResponse);
+     
 
       let responseData;
       try {
@@ -384,7 +384,7 @@ const ConversationScreen = ({ route, navigation }) => {
         );
       }
 
-      console.log('Upload successful:', responseData.url);
+   
       return responseData.url;
     } catch (error) {
       console.error('Error during file upload:', error.message);
@@ -395,12 +395,12 @@ const ConversationScreen = ({ route, navigation }) => {
 
   const uploadAttachments = async () => {
     if (!formData || selectedAttachments.length === 0) {
-      console.log('No attachments to upload');
+   
       return [];
     }
 
     try {
-      console.log('Uploading attachments...');
+   
 
           const credentials = await Keychain.getGenericPassword();
             const Token = credentials.password;
@@ -423,10 +423,10 @@ const ConversationScreen = ({ route, navigation }) => {
           body: formDataToUpload,
         });
 
-        console.log('Upload status code:', response.status);
+      
 
         const textResponse = await response.text();
-        console.log('Raw response:', textResponse);
+    
 
         let responseData;
         try {
@@ -442,7 +442,7 @@ const ConversationScreen = ({ route, navigation }) => {
           );
         }
 
-        console.log('Upload successful:', responseData.url);
+      
         return responseData.url;
       });
 
@@ -486,7 +486,7 @@ const ConversationScreen = ({ route, navigation }) => {
         flatListRef.current?.scrollToEnd({ animated: true });
       }, 100);
 
-      console.log(conversationId);
+    
 
           const credentials = await Keychain.getGenericPassword();
             const Token = credentials.password;
@@ -516,7 +516,7 @@ const ConversationScreen = ({ route, navigation }) => {
       );
 
       const onResponse = res => {
-        console.log('Message sent successfully:', res);
+     
         setSendingMessage(false);
 
         setTimeout(() => {
@@ -568,8 +568,7 @@ const ConversationScreen = ({ route, navigation }) => {
       const onResponse = res => {
         if (res) {
           setTeacherName(res.firstName + ' ' + res.lastName);
-          console.log(res);
-          console.log(TeacherName);
+      
         }
         setLoading(false);
       };
@@ -587,7 +586,7 @@ const ConversationScreen = ({ route, navigation }) => {
   };
 
   const Create_message = async () => {
-    console.log(TeacherName);
+  
 
     if (newMessage.trim() === '' && selectedAttachments.length === 0) return;
 
@@ -647,7 +646,7 @@ const ConversationScreen = ({ route, navigation }) => {
       };
 
       const onResponse = res => {
-        console.log('Message Created successfully:', res);
+      
         setSendingMessage(false);
 
         setShowSuccess(true);
@@ -697,7 +696,7 @@ const ConversationScreen = ({ route, navigation }) => {
   };
 
   const handleOpenAttachment = url => {
-    console.log('Opening attachment:', url);
+   
     Alert.alert(
       'Attachment',
       typeof url === 'string' ? url.split('/').pop() : url.name || 'Attachment',
@@ -914,7 +913,7 @@ const ConversationScreen = ({ route, navigation }) => {
                 : conversationData?.senderName}
           </Text>
         </View>
-        <TouchableOpacity onPress={() => console.log('More options')}>
+        <TouchableOpacity onPress={}>
           <MaterialIcons name="more-vert" size={28} color="#001d3d" />
         </TouchableOpacity>
       </View>

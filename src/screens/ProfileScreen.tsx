@@ -192,7 +192,7 @@ const ProfileScreen = ({navigation, item}) => {
         Authorization: `Bearer ${Token}`,
       };
 
-      console.log('Batches fetching apiii');
+    
 
       const onBatchesResponse = res => {
         if (res) {
