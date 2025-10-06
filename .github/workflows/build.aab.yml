@@ -40,13 +40,20 @@ jobs:
         run: |
           mkdir -p android/app
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/release.keystore
-
+          
+      - name: Verify Keystore
+        run: |
+         echo "Listing android/app folder..."
+         ls -la android/app
+         echo "Checking file type..."
+         file android/app/release.keystore || echo "Keystore missing!"
+         
       - name: Build Signed AAB
         run: |
           cd android
           ./gradlew clean
           ./gradlew bundleRelease \
-            -Pandroid.injected.signing.store.file=app/release.keystore \
+            -Pandroid.injected.signing.store.file=$PWD/app/release.keystore \
             -Pandroid.injected.signing.store.password=${{ secrets.KEYSTORE_PASSWORD }} \
             -Pandroid.injected.signing.key.alias=${{ secrets.KEY_ALIAS }} \
             -Pandroid.injected.signing.key.password=${{ secrets.KEY_PASSWORD }}
