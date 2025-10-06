@@ -131,7 +131,7 @@ const StudentCreation = ({navigation, route}) => {
         return false;
       }
     } catch (error) {
-      console.error('Error checking username:', error);
+     
       Toast.show({
         type: 'error',
         text1: 'Username Error',
@@ -445,7 +445,7 @@ const StudentCreation = ({navigation, route}) => {
         }
       }
     } catch (error) {
-      console.error('Error in image upload process:', error);
+   
       Toast.show({
         type: 'error',
         text1: 'Error',
@@ -521,7 +521,7 @@ const StudentCreation = ({navigation, route}) => {
 
       putapi(url, headers, payload, onResponse, onCatch, navigation);
     } catch (error) {
-      console.error('Error update student:', error);
+    
       Toast.show({
         type: 'error',
         text1: 'Error',
@@ -595,7 +595,7 @@ const StudentCreation = ({navigation, route}) => {
 
       postApi(url, headers, payload, onResponse, onCatch, navigation);
     } catch (error) {
-      console.error('Error creating student:', error);
+    
       Toast.show({
         type: 'error',
         text1: 'Error',
@@ -638,7 +638,7 @@ const StudentCreation = ({navigation, route}) => {
       };
 
       const onCatch = error => {
-        console.error('Error adding student to batch:', error);
+     
         Toast.show({
           type: 'error',
           text1: 'Error',
@@ -648,7 +648,7 @@ const StudentCreation = ({navigation, route}) => {
 
       patchApi(url, headers, null, onResponse, onCatch, navigation);
     } catch (error) {
-      console.error('Error adding student to batch:', error);
+    
       Toast.show({
         type: 'error',
         text1: 'Error',

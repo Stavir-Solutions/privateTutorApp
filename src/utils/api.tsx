@@ -41,7 +41,7 @@ export const handleLogout = async (navigation: any): Promise<void> => {
       });
     }
   } catch (error) {
-    console.error('Error during logout process:', error);
+  
   }
 };
 
@@ -51,7 +51,7 @@ export const refreshToken = async (): Promise<RefreshTokenResponse | null> => {
     const refreshToken = await AsyncStorage.getItem('RefreshToken');
 
     if (!refreshToken) {
-      console.error('No refresh token found');
+     
       return null;
     }
 
@@ -97,11 +97,11 @@ export const refreshToken = async (): Promise<RefreshTokenResponse | null> => {
         throw new Error('Invalid response from refresh token endpoint');
       }
     } catch (error) {
-      console.error('JSON Parse Error:', error);
+    
       throw new Error(`Invalid JSON response: ${text}`);
     }
   } catch (error) {
-    console.error('Token Refresh Error:', error);
+
     return null;
   }
 };
@@ -164,7 +164,7 @@ const handleTokenRefresh = async (
       }
     }
   } catch (error) {
-    console.error('Token refresh handling error:', error);
+  
     await AsyncStorage.multiRemove(['Token', 'RefreshToken', 'TeacherId']);
     // handleLogout(navigation)
     if (onCatch) {
@@ -241,7 +241,7 @@ export const postApi = async (
       );
       responseJson = JSON.parse(fixedText);
     } catch (err) {
-      console.error('JSON Parse Error:', err);
+    
 
       let errorText = 'Something went wrong';
       try {
@@ -265,7 +265,7 @@ export const postApi = async (
         ? error
         : error?.message || 'Something went wrong';
 
-    console.error('POST API Error:', errorMessage);
+  
     onCatch && onCatch({error: errorMessage});
   }
 };
@@ -322,7 +322,7 @@ export const getapi = async (
 
     return responseJson;
   } catch (error) {
-    console.error('API Fetch Error:', error);
+   
 
     if (onCatch) {
       onCatch(error);
@@ -372,7 +372,7 @@ export const patchApi = async (
 
     if (!response.ok) {
       const errorMessage = `HTTP Error: ${response.status} ${response.statusText}`;
-      console.error(errorMessage, text);
+      
 
       const error = new Error(errorMessage);
       (error as any).status = response.status;
@@ -394,14 +394,14 @@ export const patchApi = async (
       onResponse && onResponse(responseJson);
       return responseJson;
     } catch (error) {
-      console.error('JSON Parse Error:', error);
+    
       const parseError = new Error(`Invalid JSON response: ${text}`);
 
       onCatch && onCatch(parseError);
       return Promise.reject(parseError);
     }
   } catch (e) {
-    console.error('Fetch Error:', e);
+
 
     onCatch && onCatch(e);
     return Promise.reject(e);
@@ -461,7 +461,7 @@ export const putapi = async (
       );
       responseJson = JSON.parse(fixedText);
     } catch (err) {
-      console.error('JSON Parse Error:', err);
+    
       throw new Error(`Invalid JSON response: ${text}`);
     }
 
@@ -472,7 +472,7 @@ export const putapi = async (
 
     onResponse && onResponse(responseJson);
   } catch (error: any) {
-    console.error('PUT API Error:', error);
+  
 
     const errorMessage =
       typeof error === 'string'
@@ -531,7 +531,7 @@ export const deleteapi = async (
 
           return JSON.parse(fixedText);
         } catch (error) {
-          console.error('JSON Parse Error:', error);
+          
           throw new Error(`Invalid JSON response: ${text}`);
         }
       })
@@ -542,11 +542,11 @@ export const deleteapi = async (
         }
       })
       .catch(e => {
-        console.error('Fetch Error:', e);
+    
         onCatch && onCatch(e);
       });
   } catch (error) {
-    console.error('PUT API Error:', error);
+   
     onCatch && onCatch(error);
   }
 };

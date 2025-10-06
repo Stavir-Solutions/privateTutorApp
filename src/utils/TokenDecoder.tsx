@@ -5,7 +5,7 @@ export const tokenDecode = (token: string): JwtPayload | null => {
         return jwtDecode<JwtPayload>(token);
         
     } catch (error) {
-        console.error("Invalid token:", error);
+      
         return null;
     }
 };

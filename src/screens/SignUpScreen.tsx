@@ -237,7 +237,7 @@ const SignupScreen = ({navigation}) => {
         setCreateId(teacherId);
         handleNavigation(teacherId);
       } catch (error) {
-        console.error('Error processing response:', error);
+       
         Toast.show({
           type: 'error',
           text1: 'Error',

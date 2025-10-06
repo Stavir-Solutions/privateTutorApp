@@ -50,7 +50,7 @@ const ConversationScreen = ({ route, navigation }) => {
       setTeacherId(id);
       setTeacherName(username);
     } catch (err) {
-      console.error('Error loading user data:', err);
+     
       setError('Failed to load user data');
     }
   };
@@ -176,12 +176,12 @@ const ConversationScreen = ({ route, navigation }) => {
       };
 
       const onCatch = err => {
-        console.error('Error refreshing messages:', err);
+      
       };
 
       getapi(url, headers, onResponse, onCatch, navigation);
     } catch (err) {
-      console.error('Exception when refreshing messages:', err);
+    
     }
   };
 
@@ -245,14 +245,14 @@ const ConversationScreen = ({ route, navigation }) => {
       };
 
       const onCatch = err => {
-        console.error('Error fetching messages:', err);
+      
         setError('Failed to load conversation. Please try again.');
         setLoading(false);
       };
 
       getapi(url, headers, onResponse, onCatch, navigation);
     } catch (err) {
-      console.error('Exception when fetching messages:', err);
+      
       setError('An unexpected error occurred');
       setLoading(false);
     }
@@ -332,7 +332,7 @@ const ConversationScreen = ({ route, navigation }) => {
     } catch (err) {
     
       if (err.code !== 'DOCUMENT_PICKER_CANCELED') {
-        console.error('Error picking document:', err);
+        
         Alert.alert('Error', 'Failed to select attachment');
       }
     }
@@ -374,7 +374,7 @@ const ConversationScreen = ({ route, navigation }) => {
       try {
         responseData = JSON.parse(textResponse);
       } catch (error) {
-        console.error('Error parsing response:', error);
+       
         throw new Error('Invalid response from server');
       }
 
@@ -387,7 +387,7 @@ const ConversationScreen = ({ route, navigation }) => {
    
       return responseData.url;
     } catch (error) {
-      console.error('Error during file upload:', error.message);
+  
       Alert.alert('Error', 'Failed to upload attachment');
       return null;
     }
@@ -432,7 +432,7 @@ const ConversationScreen = ({ route, navigation }) => {
         try {
           responseData = JSON.parse(textResponse);
         } catch (error) {
-          console.error('Error parsing response:', error);
+          
           throw new Error('Invalid response from server');
         }
 
@@ -449,7 +449,7 @@ const ConversationScreen = ({ route, navigation }) => {
       const attachmentUrls = await Promise.all(uploadPromises);
       return attachmentUrls;
     } catch (error) {
-      console.error('Error during file upload:', error.message);
+    
       Alert.alert('Error', 'Failed to upload attachments');
       return [];
     }
@@ -525,7 +525,7 @@ const ConversationScreen = ({ route, navigation }) => {
       };
 
       const onCatch = err => {
-        console.error('Error sending message:', err);
+      
         setSendingMessage(false);
 
         Alert.alert('Error', 'Failed to send message. Please try again.');
@@ -538,7 +538,7 @@ const ConversationScreen = ({ route, navigation }) => {
 
       patchApi(url, headers, fliteredData, onResponse, onCatch, navigation);
     } catch (error) {
-      console.error('Exception when sending message:', error);
+    
       setSendingMessage(false);
       Alert.alert(
         'Error',
@@ -574,13 +574,13 @@ const ConversationScreen = ({ route, navigation }) => {
       };
 
       const onCatch = error => {
-        console.error('API Error:', error);
+     
         setLoading(false);
       };
 
       getapi(url, headers, onResponse, onCatch, navigation);
     } catch (error) {
-      console.error('TeacherDetails Error:', error.message);
+    
       setLoading(false);
     }
   };
@@ -673,7 +673,7 @@ const ConversationScreen = ({ route, navigation }) => {
       };
 
       const onCatch = err => {
-        console.error('Error sending message:', err);
+      
         setSendingMessage(false);
 
         Alert.alert('Error', 'Failed to send message. Please try again.');
@@ -686,7 +686,7 @@ const ConversationScreen = ({ route, navigation }) => {
     
       postApi(url, headers, data, onResponse, onCatch, navigation);
     } catch (error) {
-      console.error('Exception when sending message:', error);
+      
       setSendingMessage(false);
       Alert.alert(
         'Error',

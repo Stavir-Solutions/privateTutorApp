@@ -81,7 +81,7 @@ const HomeScreen = ({navigation}) => {
     };
 
     const onCatch = res => {
-      console.error('Error fetching students:', res);
+     
       setLoading(false);
       setStudents([]);
       setFilteredStudents([]);
@@ -117,7 +117,7 @@ const HomeScreen = ({navigation}) => {
     };
 
     const onCatch = error => {
-      console.error('API Error:', error);
+   
       setLoading(false);
     };
 

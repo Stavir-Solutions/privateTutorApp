@@ -58,7 +58,7 @@ const CreateAssignment = ({navigation, route}) => {
       if (!isNaN(dateObject.getTime())) {
         setSubmitdate(dateObject);
       } else {
-        console.error('Invalid date string:', date);
+       
       }
     }
 
@@ -182,7 +182,7 @@ const CreateAssignment = ({navigation, route}) => {
       animateSuccess();
       setTimeout(() => setShowSuccessMessage(false), 3000);
     } catch (error) {
-      console.error('Error during save:', error.message);
+     
 
       setIsSaving(false);
     }
@@ -226,7 +226,7 @@ const CreateAssignment = ({navigation, route}) => {
         });
       }
     } catch (error) {
-      console.error('Document Picker Error:', error);
+      
     }
   };
 
@@ -279,7 +279,7 @@ const CreateAssignment = ({navigation, route}) => {
       try {
         responseData = JSON.parse(textResponse);
       } catch (error) {
-        console.error('Error parsing JSON response:', error);
+      
         return undefined;
       }
 
@@ -292,7 +292,7 @@ const CreateAssignment = ({navigation, route}) => {
      
       return responseData.url;
     } catch (error) {
-      console.error('Error during file upload:', error.message);
+     
       return undefined;
     }
   };
@@ -345,13 +345,13 @@ const CreateAssignment = ({navigation, route}) => {
           text1: 'Failed',
           text2: 'Assigment creation failed',
         });
-        console.error('Error submitting assignment:', error);
+    
       };
 
       postApi(url, headers, fliteredData, onResponse, onCatch, navigation);
    
     } catch (error) {
-      console.error('Error during assignment submission:', error);
+    
     }
   };
 

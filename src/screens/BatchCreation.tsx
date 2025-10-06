@@ -139,7 +139,7 @@ const BatchCreation = ({navigation, route}) => {
       };
 
       const onCatch = error => {
-        console.error('Batch Creation Failed:', error);
+      
         Toast.show({
           type: 'error',
           text1: 'Error',
@@ -157,7 +157,7 @@ const BatchCreation = ({navigation, route}) => {
         navigation,
       );
     } catch (error) {
-      console.error('Batch_Creation Error:', error.message);
+ 
       Toast.show({
         type: 'error',
         text1: 'Error',
@@ -203,7 +203,7 @@ const BatchCreation = ({navigation, route}) => {
       };
 
       const onCatch = error => {
-        console.error('Batch Updation Failed:', error);
+     
         Toast.show({
           type: 'error',
           text1: 'Error',
@@ -222,7 +222,7 @@ const BatchCreation = ({navigation, route}) => {
       );
     
     } catch (error) {
-      console.error('Batch_Updation Error:', error.message);
+   
       Toast.show({
         type: 'error',
         text1: 'Error',

@@ -179,7 +179,7 @@ const ProfileScreen = ({navigation, item}) => {
       };
 
       const onCatch = error => {
-        console.error('API Error:', error);
+      
         setLoading(false);
       };
 
@@ -201,7 +201,7 @@ const ProfileScreen = ({navigation, item}) => {
       };
 
       const onBatchesCatch = error => {
-        console.error('Batches API Error:', error);
+      
       };
 
       getapi(
@@ -212,7 +212,7 @@ const ProfileScreen = ({navigation, item}) => {
         navigation,
       );
     } catch (error) {
-      console.error('TeacherDetails Error:', error.message);
+    
       setLoading(false);
     }
   };
@@ -249,14 +249,14 @@ const ProfileScreen = ({navigation, item}) => {
       };
 
       const onCatch = res => {
-        console.error('Delete Batch Error:', res);
+  
         setConfirmDialogVisible(false);
         showToast('Failed to delete batch', 'error');
       };
 
       deleteapi(url, headers, onResponse, onCatch, navigation);
     } catch (error) {
-      console.error('Delete Batch Error:', error);
+     
       setConfirmDialogVisible(false);
       showToast('Failed to delete batch', 'error');
     }

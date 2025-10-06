@@ -212,7 +212,7 @@ const NoteCreateScreen = ({navigation, route}) => {
       animateSuccess();
       setTimeout(() => setShowSuccessMessage(false), 3000);
     } catch (error) {
-      console.error('Error during save:', error.message);
+     
       setIsSaving(false);
 
       Toast.show({
@@ -259,7 +259,7 @@ const NoteCreateScreen = ({navigation, route}) => {
         });
       }
     } catch (error) {
-      console.error('Document Picker Error:', error);
+    
 
       Toast.show({
         type: 'error',
@@ -305,7 +305,7 @@ const NoteCreateScreen = ({navigation, route}) => {
       try {
         responseData = JSON.parse(textResponse);
       } catch (error) {
-        console.error('Error parsing JSON response:', error);
+       
         return undefined;
       }
 
@@ -318,7 +318,7 @@ const NoteCreateScreen = ({navigation, route}) => {
    
       return responseData.url;
     } catch (error) {
-      console.error('Error during file upload:', error.message);
+      
       return undefined;
     }
   };

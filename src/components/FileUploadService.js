@@ -47,7 +47,7 @@ export const pickImage = async (options = {}) => {
       formData,
     };
   } catch (error) {
-    console.error('Error picking image:', error);
+   
     return {
       success: false,
       message: 'Error selecting image',
@@ -103,7 +103,7 @@ export const uploadFile = async (formData, uploadType) => {
     try {
       responseData = JSON.parse(textResponse);
     } catch (error) {
-      console.error('Error parsing response:', error);
+  
       return {
         success: false,
         message: 'Invalid response from server',
@@ -126,7 +126,7 @@ export const uploadFile = async (formData, uploadType) => {
       responseData,
     };
   } catch (error) {
-    console.error('Error uploading file:', error);
+
     return {
       success: false,
       message: 'Error during file upload',

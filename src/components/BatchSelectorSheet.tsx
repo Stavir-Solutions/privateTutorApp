@@ -82,7 +82,7 @@ const BatchSelectorSheet = React.forwardRef(
           return response;
         })
         .catch(error => {
-          console.error('Error refreshing batches:', error);
+     
         });
     }, [dispatch, selectedBatch, reduxSelectedBatch]);
 
@@ -132,7 +132,7 @@ const BatchSelectorSheet = React.forwardRef(
           const parsedBatch = JSON.parse(reduxSelectedBatch);
           setSelectedBatch(parsedBatch);
         } catch (error) {
-          console.error('Error parsing batch:', error);
+         
         }
       }
     }, [reduxSelectedBatch]);

@@ -141,7 +141,7 @@ const FeesScreen = ({navigation}) => {
               }
             },
             error => {
-              console.error(`Error fetching student ${studentId}:`, error);
+          
               resolve(null);
             },
             navigation,

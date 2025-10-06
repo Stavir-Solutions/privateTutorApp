@@ -28,7 +28,7 @@ export const fetch_batchs = createAsyncThunk(
       const Teacher_id = await AsyncStorage.getItem('TeacherId');
 
       if (!Token || !Teacher_id) {
-        console.error('Missing Token or Teacher ID');
+        
         return rejectWithValue('No Token or Teacher ID found');
       }
 
@@ -48,13 +48,13 @@ export const fetch_batchs = createAsyncThunk(
             resolve(res || []);
           },
           error => {
-            console.error('Error fetching batches:', error);
+          
             reject(error);
           },
         );
       });
     } catch (error) {
-      console.error('Fetch Batch Error:', error);
+    
       return rejectWithValue(error.message);
     }
   },

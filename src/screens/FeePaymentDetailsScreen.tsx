@@ -107,7 +107,7 @@ const FeePaymentDetailsScreen = ({route, navigation}) => {
     };
 
     const onCatch = res => {
-      console.error('Error deleting fee:', res);
+     
       setLoading(false);
     };
     deleteapi(url, headers, onResponse, onCatch, navigation);
@@ -152,7 +152,7 @@ const FeePaymentDetailsScreen = ({route, navigation}) => {
       };
 
       const onCatch = async error => {
-        console.error('Fee Marking Failed:', error);
+     
         Toast.show({
           type: 'error',
           text1: 'Error',
@@ -167,7 +167,7 @@ const FeePaymentDetailsScreen = ({route, navigation}) => {
       await patchApi(url, headers, body, onResponse, onCatch, navigation);
       
     } catch (error) {
-      console.error('Fees marking Error:', error.message);
+     
       Alert.alert('Error', error.message);
     }
   };

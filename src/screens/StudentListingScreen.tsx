@@ -48,7 +48,7 @@ const StudentListing = ({navigation}) => {
     };
 
     const onCatch = res => {
-      console.error('Error fetching students:', res);
+      
       setLoading(false);
       setStudents([]);
       setFilteredStudents([]);

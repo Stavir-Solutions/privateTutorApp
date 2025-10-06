@@ -153,7 +153,7 @@ const UpdateProfileScreen = ({navigation, route}) => {
         });
       }
     } catch (error) {
-      console.error('Error in image picking/uploading:', error);
+    
       setErrors(prev => ({
         ...prev,
         profilePicUrl: 'Error uploading image. Please try again.',
@@ -373,7 +373,7 @@ const UpdateProfileScreen = ({navigation, route}) => {
       putapi(url, headers, payload, onResponse, onCatch, navigation);
     } catch (error) {
       setIsLoading(false);
-      console.error('Error submitting profile:', error);
+     
       Toast.show({
         type: 'error',
         text1: 'Failed',

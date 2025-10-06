@@ -115,7 +115,7 @@ const NotificationScreen = ({navigation}) => {
       };
 
       const onCatch = error => {
-        console.error('Error in notification marking:', error);
+    
         Alert.alert('Error', 'Failed to mark notification. Please try again.', [
           {text: 'OK'},
         ]);
@@ -123,7 +123,7 @@ const NotificationScreen = ({navigation}) => {
 
       patchApi(url, headers, null, onResponse, onCatch, navigation);
     } catch (error) {
-      console.error('Error marking notification:', error);
+     
       Alert.alert('Error', 'Failed to mark notification. Please try again.', [
         {text: 'OK'},
       ]);

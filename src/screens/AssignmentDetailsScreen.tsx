@@ -40,7 +40,7 @@ const AssignmentDetailsScreen = ({route, navigation}) => {
    
       // }
     } catch (error) {
-      console.error('An error occurred', error);
+   
       Alert.alert('Error', 'Something went wrong while opening the attachment');
     }
   };

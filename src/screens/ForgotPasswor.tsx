@@ -96,7 +96,7 @@ const ForgotPassword = ({navigation}) => {
 
         visibilityTime: 3000,
       });
-      console.error('Reset password error:', error);
+      
     }
   };
 
