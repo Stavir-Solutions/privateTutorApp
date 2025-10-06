@@ -1,7 +1,7 @@
 name: Build Signed AAB
 
 on:
-  workflow_dispatch
+  workflow_dispatch:
 
 jobs:
   build:
@@ -39,20 +39,21 @@ jobs:
       - name: Decode Keystore
         run: |
           mkdir -p android/app
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android//app/release.keystore
-      
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/release.keystore
+
       - name: Build Signed AAB
         run: |
           cd android
+          ./gradlew clean
           ./gradlew bundleRelease \
-            -Pandroid.injected.signing.store.file=release.keystore \
+            -Pandroid.injected.signing.store.file=app/release.keystore \
             -Pandroid.injected.signing.store.password=${{ secrets.KEYSTORE_PASSWORD }} \
             -Pandroid.injected.signing.key.alias=${{ secrets.KEY_ALIAS }} \
             -Pandroid.injected.signing.key.password=${{ secrets.KEY_PASSWORD }}
 
       - name: Rename AAB
         run: |
-          FILE_NAME="TutorApp.${VERSION}.aab"
+          FILE_NAME="TutorApp_${VERSION}.aab"
           cp android/app/build/outputs/bundle/release/app-release.aab "$FILE_NAME"
           echo "AAB_NAME=$FILE_NAME" >> $GITHUB_ENV
 
@@ -64,5 +65,5 @@ jobs:
 
       - name: Output Summary
         run: |
-          echo " AAB version: $VERSION" >> $GITHUB_STEP_SUMMARY
-          echo " Artifact name: $AAB_NAME" >> $GITHUB_STEP_SUMMARY
+          echo "AAB version: $VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "Artifact name: $AAB_NAME" >> $GITHUB_STEP_SUMMARY
