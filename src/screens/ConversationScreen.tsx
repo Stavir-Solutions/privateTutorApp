@@ -15,18 +15,18 @@ import {
   RefreshControl,
   Linking,
 } from 'react-native';
-import React, { useEffect, useRef, useState } from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { getapi, patchApi, postApi } from '../utils/api';
+import {getapi, patchApi, postApi} from '../utils/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { pick } from '@react-native-documents/picker';
-import { base_url } from '../utils/store';
+import {pick} from '@react-native-documents/picker';
+import {base_url} from '../utils/store';
 import * as Keychain from 'react-native-keychain';
 
-const ConversationScreen = ({ route, navigation }) => {
-  const { deeplink, conversationId } = route?.params;
+const ConversationScreen = ({route, navigation}) => {
+  const {deeplink, conversationId} = route?.params;
   const [createmessage, setcreate] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -50,7 +50,6 @@ const ConversationScreen = ({ route, navigation }) => {
       setTeacherId(id);
       setTeacherName(username);
     } catch (err) {
-     
       setError('Failed to load user data');
     }
   };
@@ -82,7 +81,6 @@ const ConversationScreen = ({ route, navigation }) => {
   useEffect(() => {
     loadUserData();
     if (conversationId) {
-   
       getMessageById(conversationId);
     } else {
       setError('No conversation data provided');
@@ -95,7 +93,7 @@ const ConversationScreen = ({ route, navigation }) => {
           animated: false,
         });
       } else {
-        flatListRef.current.scrollToEnd({ animated: false });
+        flatListRef.current.scrollToEnd({animated: false});
       }
     }
   }, [conversationId]);
@@ -109,7 +107,7 @@ const ConversationScreen = ({ route, navigation }) => {
             animated: true,
           });
         } else {
-          flatListRef.current.scrollToEnd({ animated: true });
+          flatListRef.current.scrollToEnd({animated: true});
         }
       }, 100);
     }
@@ -117,8 +115,8 @@ const ConversationScreen = ({ route, navigation }) => {
 
   const refreshMessages = async () => {
     try {
-          const credentials = await Keychain.getGenericPassword();
-            const Token = credentials.password;
+      const credentials = await Keychain.getGenericPassword();
+      const Token = credentials.password;
       const url = `/messages/${conversationId}`;
       const headers = {
         Accept: 'application/json',
@@ -163,26 +161,21 @@ const ConversationScreen = ({ route, navigation }) => {
           );
 
           if (hasNewMessages) {
-        
             setMessages(allMessages);
 
             setTimeout(() => {
               if (flatListRef.current) {
-                flatListRef.current.scrollToEnd({ animated: true });
+                flatListRef.current.scrollToEnd({animated: true});
               }
             }, 100);
           }
         }
       };
 
-      const onCatch = err => {
-      
-      };
+      const onCatch = err => {};
 
       getapi(url, headers, onResponse, onCatch, navigation);
-    } catch (err) {
-    
-    }
+    } catch (err) {}
   };
 
   const onRefresh = async () => {
@@ -196,8 +189,8 @@ const ConversationScreen = ({ route, navigation }) => {
     setError(null);
 
     try {
-          const credentials = await Keychain.getGenericPassword();
-            const Token = credentials.password;
+      const credentials = await Keychain.getGenericPassword();
+      const Token = credentials.password;
       const url = `/messages/${id}`;
       const headers = {
         Accept: 'application/json',
@@ -245,14 +238,12 @@ const ConversationScreen = ({ route, navigation }) => {
       };
 
       const onCatch = err => {
-      
         setError('Failed to load conversation. Please try again.');
         setLoading(false);
       };
 
       getapi(url, headers, onResponse, onCatch, navigation);
     } catch (err) {
-      
       setError('An unexpected error occurred');
       setLoading(false);
     }
@@ -260,7 +251,7 @@ const ConversationScreen = ({ route, navigation }) => {
 
   const formatTime = dateString => {
     const date = new Date(dateString);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
   };
 
   const formatDate = dateString => {
@@ -310,8 +301,6 @@ const ConversationScreen = ({ route, navigation }) => {
       });
 
       if (result && result.length > 0) {
-    
-
         const fileDataArray = result.map(selectedFile => ({
           uri:
             Platform.OS === 'android'
@@ -330,9 +319,7 @@ const ConversationScreen = ({ route, navigation }) => {
         setFormData({});
       }
     } catch (err) {
-    
       if (err.code !== 'DOCUMENT_PICKER_CANCELED') {
-        
         Alert.alert('Error', 'Failed to select attachment');
       }
     }
@@ -340,15 +327,12 @@ const ConversationScreen = ({ route, navigation }) => {
 
   const uploadAttachment = async () => {
     if (!formData || selectedAttachments.length === 0) {
-    
       return null;
     }
 
     try {
-   
-
-          const credentials = await Keychain.getGenericPassword();
-            const Token = credentials.password;
+      const credentials = await Keychain.getGenericPassword();
+      const Token = credentials.password;
       const fileData = selectedAttachments[0];
 
       const formDataToUpload = new FormData();
@@ -365,16 +349,12 @@ const ConversationScreen = ({ route, navigation }) => {
         body: formDataToUpload,
       });
 
-     
-
       const textResponse = await response.text();
-     
 
       let responseData;
       try {
         responseData = JSON.parse(textResponse);
       } catch (error) {
-       
         throw new Error('Invalid response from server');
       }
 
@@ -384,10 +364,8 @@ const ConversationScreen = ({ route, navigation }) => {
         );
       }
 
-   
       return responseData.url;
     } catch (error) {
-  
       Alert.alert('Error', 'Failed to upload attachment');
       return null;
     }
@@ -395,15 +373,12 @@ const ConversationScreen = ({ route, navigation }) => {
 
   const uploadAttachments = async () => {
     if (!formData || selectedAttachments.length === 0) {
-   
       return [];
     }
 
     try {
-   
-
-          const credentials = await Keychain.getGenericPassword();
-            const Token = credentials.password;
+      const credentials = await Keychain.getGenericPassword();
+      const Token = credentials.password;
       const userId = await AsyncStorage.getItem('TeacherId');
       const uploadPromises = selectedAttachments.map(async fileData => {
         const formDataToUpload = new FormData();
@@ -423,16 +398,12 @@ const ConversationScreen = ({ route, navigation }) => {
           body: formDataToUpload,
         });
 
-      
-
         const textResponse = await response.text();
-    
 
         let responseData;
         try {
           responseData = JSON.parse(textResponse);
         } catch (error) {
-          
           throw new Error('Invalid response from server');
         }
 
@@ -442,14 +413,12 @@ const ConversationScreen = ({ route, navigation }) => {
           );
         }
 
-      
         return responseData.url;
       });
 
       const attachmentUrls = await Promise.all(uploadPromises);
       return attachmentUrls;
     } catch (error) {
-    
       Alert.alert('Error', 'Failed to upload attachments');
       return [];
     }
@@ -483,13 +452,11 @@ const ConversationScreen = ({ route, navigation }) => {
       setFormData(null);
 
       setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
+        flatListRef.current?.scrollToEnd({animated: true});
       }, 100);
 
-    
-
-          const credentials = await Keychain.getGenericPassword();
-            const Token = credentials.password;
+      const credentials = await Keychain.getGenericPassword();
+      const Token = credentials.password;
       const url = `messages/${conversationId}/reply`;
       const headers = {
         Accept: 'application/json',
@@ -516,7 +483,6 @@ const ConversationScreen = ({ route, navigation }) => {
       );
 
       const onResponse = res => {
-     
         setSendingMessage(false);
 
         setTimeout(() => {
@@ -525,7 +491,6 @@ const ConversationScreen = ({ route, navigation }) => {
       };
 
       const onCatch = err => {
-      
         setSendingMessage(false);
 
         Alert.alert('Error', 'Failed to send message. Please try again.');
@@ -538,7 +503,6 @@ const ConversationScreen = ({ route, navigation }) => {
 
       patchApi(url, headers, fliteredData, onResponse, onCatch, navigation);
     } catch (error) {
-    
       setSendingMessage(false);
       Alert.alert(
         'Error',
@@ -551,8 +515,8 @@ const ConversationScreen = ({ route, navigation }) => {
     try {
       setLoading(true);
 
-          const credentials = await Keychain.getGenericPassword();
-            const Token = credentials.password;
+      const credentials = await Keychain.getGenericPassword();
+      const Token = credentials.password;
       const Tid = await AsyncStorage.getItem('TeacherId');
       if (!Token) {
         throw new Error('No token found, authentication required');
@@ -568,26 +532,21 @@ const ConversationScreen = ({ route, navigation }) => {
       const onResponse = res => {
         if (res) {
           setTeacherName(res.firstName + ' ' + res.lastName);
-      
         }
         setLoading(false);
       };
 
       const onCatch = error => {
-     
         setLoading(false);
       };
 
       getapi(url, headers, onResponse, onCatch, navigation);
     } catch (error) {
-    
       setLoading(false);
     }
   };
 
   const Create_message = async () => {
-  
-
     if (newMessage.trim() === '' && selectedAttachments.length === 0) return;
 
     setSendingMessage(true);
@@ -607,7 +566,9 @@ const ConversationScreen = ({ route, navigation }) => {
         content: messageContent,
         timestamp: new Date().toISOString(),
         attachmentUrls: attachmentUrls,
-        receiverName: student?.firstName ? student?.firstName + student?.lastName : student?.userName,
+        receiverName: student?.firstName
+          ? student?.firstName + student?.lastName
+          : student?.userName,
         receiverType: 'STUDENT',
         receiver: student.id,
         batchId: Batch_id,
@@ -619,11 +580,11 @@ const ConversationScreen = ({ route, navigation }) => {
       setFormData(null);
 
       setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
+        flatListRef.current?.scrollToEnd({animated: true});
       }, 100);
 
-          const credentials = await Keychain.getGenericPassword();
-            const Token = credentials.password;
+      const credentials = await Keychain.getGenericPassword();
+      const Token = credentials.password;
       const url = `messages`;
       const headers = {
         Accept: 'application/json',
@@ -639,14 +600,15 @@ const ConversationScreen = ({ route, navigation }) => {
         content: messageContent,
         timestamp: new Date().toISOString(),
         attachmentUrls: attachmentUrls,
-        receiverName: student?.firstName ? student?.firstName +" " + student?.lastName : student?.userName,
+        receiverName: student?.firstName
+          ? student?.firstName + ' ' + student?.lastName
+          : student?.userName,
         receiverType: 'STUDENT',
         receiver: student.id,
         batchId: Batch_id,
       };
 
       const onResponse = res => {
-      
         setSendingMessage(false);
 
         setShowSuccess(true);
@@ -654,7 +616,7 @@ const ConversationScreen = ({ route, navigation }) => {
         if (res && res.id) {
           setMessages(prevMessages =>
             prevMessages.map(msg =>
-              msg === newMessageObj ? { ...msg, id: res.id } : msg,
+              msg === newMessageObj ? {...msg, id: res.id} : msg,
             ),
           );
 
@@ -673,7 +635,6 @@ const ConversationScreen = ({ route, navigation }) => {
       };
 
       const onCatch = err => {
-      
         setSendingMessage(false);
 
         Alert.alert('Error', 'Failed to send message. Please try again.');
@@ -683,10 +644,9 @@ const ConversationScreen = ({ route, navigation }) => {
         );
         setNewMessage(messageContent);
       };
-    
+
       postApi(url, headers, data, onResponse, onCatch, navigation);
     } catch (error) {
-      
       setSendingMessage(false);
       Alert.alert(
         'Error',
@@ -696,13 +656,12 @@ const ConversationScreen = ({ route, navigation }) => {
   };
 
   const handleOpenAttachment = url => {
-   
     Alert.alert(
       'Attachment',
       typeof url === 'string' ? url.split('/').pop() : url.name || 'Attachment',
       [
-        { text: 'Download', onPress: () => Linking.openURL(url) },
-        { text: 'Cancel', style: 'cancel' },
+        {text: 'Download', onPress: () => Linking.openURL(url)},
+        {text: 'Cancel', style: 'cancel'},
       ],
     );
   };
@@ -716,9 +675,8 @@ const ConversationScreen = ({ route, navigation }) => {
       setFormData(null);
     }
   };
-  
 
-  const renderItem = ({ item }) => {
+  const renderItem = ({item}) => {
     if (item.type === 'date') {
       return (
         <View style={styles.dateContainer}>
@@ -728,7 +686,7 @@ const ConversationScreen = ({ route, navigation }) => {
     }
 
     const isCurrentUser = isFromCurrentUser(item.sender);
-       const getFilenameFromUrl = url => {
+    const getFilenameFromUrl = url => {
       try {
         const decodedUrl = decodeURIComponent(url);
         const filename = decodedUrl.split('/').pop();
@@ -834,7 +792,6 @@ const ConversationScreen = ({ route, navigation }) => {
       }
     };
 
-
     return (
       <View
         style={[
@@ -862,7 +819,7 @@ const ConversationScreen = ({ route, navigation }) => {
                   onPress={() => handleOpenAttachment(url)}>
                   {url.match(/\.(jpeg|jpg|gif|png)$/) ? (
                     <Image
-                      source={{ uri: url }}
+                      source={{uri: url}}
                       style={styles.attachmentImage}
                       resizeMode="cover"
                     />
@@ -907,13 +864,15 @@ const ConversationScreen = ({ route, navigation }) => {
         <View style={styles.appBarTitle}>
           <Text style={styles.conversationSubject}>
             {createmessage
-              ? student?.firstName ? student?.firstName +" " + student?.lastName : student?.userName
+              ? student?.firstName
+                ? student?.firstName + ' ' + student?.lastName
+                : student?.userName
               : conversationData?.sender === teacherId
-                ? conversationData?.receiverName
-                : conversationData?.senderName}
+              ? conversationData?.receiverName
+              : conversationData?.senderName}
           </Text>
         </View>
-        <TouchableOpacity onPress={}>
+        <TouchableOpacity onPress={() => {}}>
           <MaterialIcons name="more-vert" size={28} color="#001d3d" />
         </TouchableOpacity>
       </View>
@@ -957,7 +916,10 @@ const ConversationScreen = ({ route, navigation }) => {
                 color="#bdbdbd"
               />
               <Text style={styles.emptyConversationText}>
-                Start a conversation with {student?.firstName ? student?.firstName +" " + student?.lastName : student?.userName}
+                Start a conversation with{' '}
+                {student?.firstName
+                  ? student?.firstName + ' ' + student?.lastName
+                  : student?.userName}
               </Text>
               <Text style={styles.emptyConversationSubtext}>
                 Send a message to begin chatting
@@ -966,7 +928,7 @@ const ConversationScreen = ({ route, navigation }) => {
           )}
           onLayout={() => {
             if (messages.length > 0 && flatListRef.current) {
-              flatListRef.current.scrollToEnd({ animated: false });
+              flatListRef.current.scrollToEnd({animated: false});
             }
           }}
         />
@@ -998,7 +960,7 @@ const ConversationScreen = ({ route, navigation }) => {
           }
           onContentSizeChange={() => {
             if (flatListRef.current) {
-              flatListRef.current.scrollToEnd({ animated: true });
+              flatListRef.current.scrollToEnd({animated: true});
             }
           }}
         />
@@ -1009,7 +971,7 @@ const ConversationScreen = ({ route, navigation }) => {
           <FlatList
             data={selectedAttachments}
             horizontal
-            renderItem={({ item, index }) => (
+            renderItem={({item, index}) => (
               <View style={styles.selectedAttachment}>
                 <Text style={styles.selectedAttachmentText} numberOfLines={1}>
                   {item.name ||
@@ -1048,7 +1010,7 @@ const ConversationScreen = ({ route, navigation }) => {
             styles.sendButton,
             ((newMessage.trim() === '' && selectedAttachments.length === 0) ||
               sendingMessage) &&
-            styles.sendButtonDisabled,
+              styles.sendButtonDisabled,
           ]}
           disabled={
             (newMessage.trim() === '' && selectedAttachments.length === 0) ||
@@ -1295,7 +1257,7 @@ const styles = StyleSheet.create({
     zIndex: 1000,
     elevation: 5,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
   },
@@ -1310,7 +1272,7 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 4,
   },
-    fileAttachmentContainer: {
+  fileAttachmentContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
