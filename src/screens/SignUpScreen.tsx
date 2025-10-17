@@ -325,12 +325,12 @@ const SignupScreen = ({navigation}) => {
             style={styles.logo}
             source={require('../resources/logo.png')}
           />
-          <Text style={styles.logotitle}>Smart Teacher</Text>
+          <Text style={styles.logotitle}>TasmAI</Text>
         </View>
      
             <View style={styles.glassContainer}>
               <Text style={styles.title}>Create Account</Text>
-              <Text style={styles.subtitle}>Join Smart Teacher</Text>
+              <Text style={styles.subtitle}>Join TasmAI</Text>
 
               <View style={styles.inputContainer}>
                 <Feather

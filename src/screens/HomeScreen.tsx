@@ -251,7 +251,7 @@ const HomeScreen = ({navigation}) => {
             style={styles.avatarImg}
           />
         </TouchableOpacity>
-        <Text style={styles.appBarTitle}>Smart Teacher</Text>
+        <Text style={styles.appBarTitle}>TasmAI</Text>
         <TouchableOpacity onPress={() => navigation.navigate('Notification')}>
           <View style={styles.notificationIcon}>
             <Ionicons
