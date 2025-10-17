@@ -245,7 +245,7 @@ const LoginScreen = ({ navigation }) => {
           <StatusBar backgroundColor="#1D49A7" barStyle="light-content" />
           <View style={styles.logoContainer}>
             <Image style={styles.logo} source={require('../resources/logo.png')} />
-            <Text style={styles.logotitle}>Smart Teacher</Text>
+            <Text style={styles.logotitle}>TasmAI</Text>
           </View>
 
           <View style={styles.glassContainer}>
